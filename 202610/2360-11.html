@@ -1,0 +1,861 @@
+<!-- Chosen Palette: Slate & Warm Amber Professional Equity Research Palette (Background: #F8FAFC, Cards: #FFFFFF, Primary: #1E3A8A, Accent: #2563EB, Positive: #059669, Warning: #D97706) -->
+<!-- Application Structure Plan: 本應用採用 5 大模組化分頁架構（1. 投資總結與評級、2. 業務架構與四大成長引擎、3. 財務數據與獲利透視、4. 估值與目標價計算器、5. 籌碼結構與熊市風險），將密集的法說會數據、財務歷史與券商目標價轉化為可互動探索的儀表板。重點設計「動態目標價試算器」與「圖表聯動系統」，幫助投資人迅速進行敏感度分析與壓力測試。 -->
+<!-- Visualization & Content Choices: 
+1. 營收與 EPS 成長軌跡 -> 雙軸組合圖 (Chart.js Bar + Line) -> 呈現 2022-2027E 的非線性獲利爆發 -> Canvas.
+2. 三率變化趨勢 -> 折線圖 (Chart.js Line) -> 展示毛利率站穩 60% 與營業利益率衝高至 38%+ -> Canvas.
+3. 營收業務組合 -> 甜甜圈圖 (Chart.js Doughnut) -> 切換顯示半導體與高階電力檢測比重 -> Canvas.
+4. 動態目標價試算器 -> 滑桿互動區 (Vanilla JS) -> 供分析師自由拉動 EPS 與 P/E 倍數，實時計算目標價與潛在漲幅 -> Dynamic HTML.
+5. 籌碼集中度與結構 -> 圓餅圖 (Chart.js Pie) -> 展示外資 59.67% 與千張大戶籌碼沉澱狀況 -> Canvas.
+CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>致茂電子 (2360) 深度股權研究報告 | 首席分析師團隊</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .chart-container {
+      position: relative;
+      width: 100%;
+      max-width: 680px;
+      margin-left: auto;
+      margin-right: auto;
+      height: 320px;
+      max-height: 400px;
+    }
+    @media (min-width: 768px) {
+      .chart-container {
+        height: 360px;
+      }
+    }
+    .tab-btn.active {
+      border-bottom-color: #2563EB;
+      color: #2563EB;
+      font-weight: 700;
+      background-color: #EFF6FF;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-blue-100">
+
+  <!-- Header & Navigation Bar -->
+  <header class="bg-slate-900 text-white sticky top-0 z-50 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row justify-between items-center py-4 border-b border-slate-800 gap-4">
+        <div>
+          <div class="flex items-center gap-3">
+            <span class="bg-blue-600 text-white text-xs font-bold px-2.5 py-1 rounded">2360.TW</span>
+            <h1 class="text-2xl font-bold tracking-tight">致茂電子 Chroma ATE</h1>
+            <span class="bg-emerald-500/20 text-emerald-400 text-xs font-semibold px-2.5 py-0.5 rounded border border-emerald-500/30">AI 測試旗艦</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">深度股權研究報告：AI 算力革命與先進封裝驅動下的測試重估</p>
+        </div>
+        
+        <!-- Live Quick Stats -->
+        <div class="flex items-center gap-6 text-sm">
+          <div class="text-right">
+            <div class="text-xs text-slate-400">當前股價 (現價)</div>
+            <div class="text-lg font-bold text-white">NT$ 2,190.00</div>
+          </div>
+          <div class="text-right border-l border-slate-700 pl-6">
+            <div class="text-xs text-slate-400">12M 共識目標價</div>
+            <div class="text-lg font-bold text-emerald-400">NT$ 3,050.00</div>
+          </div>
+          <div class="text-right border-l border-slate-700 pl-6">
+            <div class="text-xs text-slate-400">投資評級</div>
+            <div class="inline-flex items-center text-xs font-extrabold bg-emerald-600 text-white px-3 py-1 rounded-full">強烈買入 (BUY)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex space-x-1 overflow-x-auto py-2 text-sm font-medium scrollbar-none" id="navigation-tabs">
+        <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn active px-4 py-2 rounded-t-lg border-b-2 border-transparent text-slate-300 hover:text-white transition-colors">1. 投資總結與評級</button>
+        <button onclick="switchTab('business')" id="tab-business" class="tab-btn px-4 py-2 rounded-t-lg border-b-2 border-transparent text-slate-300 hover:text-white transition-colors">2. 業務護城河與 4 大引擎</button>
+        <button onclick="switchTab('financials')" id="tab-financials" class="tab-btn px-4 py-2 rounded-t-lg border-b-2 border-transparent text-slate-300 hover:text-white transition-colors">3. 財務數據與獲利透視</button>
+        <button onclick="switchTab('valuation')" id="tab-valuation" class="tab-btn px-4 py-2 rounded-t-lg border-b-2 border-transparent text-slate-300 hover:text-white transition-colors">4. 估值與動態目標價試算</button>
+        <button onclick="switchTab('chips')" id="tab-chips" class="tab-btn px-4 py-2 rounded-t-lg border-b-2 border-transparent text-slate-300 hover:text-white transition-colors">5. 籌碼動向與風險評估</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- TAB 1: OVERVIEW & VERDICT -->
+    <section id="section-overview" class="space-y-6">
+      <!-- Introductory Paragraph -->
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        <h2 class="text-xl font-bold text-slate-900 mb-2">一、研究摘要與投資評級總覽 (Executive Summary)</h2>
+        <p class="text-slate-600 leading-relaxed text-sm">
+          本章節為致茂電子（2360）的投資核心總括。致茂已從傳統電力電子儀器廠商，成功跨越為全球高階 AI 晶片系統級測試（SLT）、CoWoS/WMCM 先進封裝光學量測（Metrology）以及資料中心 800V 高壓測試（HVDC）的獨家與核心供應商。隨著 AI 晶片功耗挑戰突破 1,500W–2,000W，致茂主動溫控（ATC）技術築起極高壁壘，驅動獲利進入非線性複利爆發期。本評估給予「買入 (BUY)」評級，12 個月目標價上看 NT$ 3,050 元。
+        </p>
+      </div>
+
+      <!-- Core Verdict & Target Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-blue-900 text-white p-5 rounded-xl shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="text-xs text-blue-200 font-semibold uppercase tracking-wider">投資評級 (Rating)</div>
+            <div class="text-3xl font-extrabold mt-1 text-emerald-400">強烈買入</div>
+            <p class="text-xs text-blue-200 mt-2">基於 2027E EPS 65.7 元與高階半導體設備重估邏輯。</p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-blue-800 text-xs text-blue-300">
+            預期潛在漲幅：<span class="text-emerald-400 font-bold text-sm">+39.3%</span>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+          <div>
+            <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider">12M 目標價 (Target Price)</div>
+            <div class="text-3xl font-bold text-slate-900 mt-1">NT$ 3,050</div>
+            <p class="text-xs text-slate-500 mt-2">花旗 / 美銀頂格目標價區間 (2,960 - 3,050元)</p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600">
+            前瞻 P/E 評價：<span class="font-semibold">46.4x (2026E) / 33.3x (2027E)</span>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+          <div>
+            <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider">2026E 預估 EPS</div>
+            <div class="text-3xl font-bold text-blue-600 mt-1">NT$ 44.40</div>
+            <p class="text-xs text-slate-500 mt-2">市場預估區間：38.93 - 45.18 元 (年增 ~60%)</p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600">
+            2026 1-8月營收年增：<span class="text-emerald-600 font-bold">+108.4%</span>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+          <div>
+            <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider">2027E 預估 EPS</div>
+            <div class="text-3xl font-bold text-emerald-600 mt-1">NT$ 65.70</div>
+            <p class="text-xs text-slate-500 mt-2">受惠 CoWoS 擴產與 CPO 商業化出貨高峰</p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600">
+            預估獲利年增率：<span class="text-emerald-600 font-bold">+48.0% YoY</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3 Buy Theses vs 3 Key Risks -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Buy Thesis -->
+        <div class="bg-emerald-50/60 border border-emerald-200 rounded-xl p-6">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="bg-emerald-600 text-white font-bold rounded-full w-6 h-6 flex items-center justify-center text-xs">✓</span>
+            <h3 class="text-lg font-bold text-emerald-900">3 大核心看多理由 (Investment Thesis)</h3>
+          </div>
+          <ul class="space-y-3 text-sm text-slate-700">
+            <li class="flex items-start gap-2">
+              <span class="font-bold text-emerald-700 shrink-0">1.</span>
+              <div><strong class="text-slate-900">SLT 系統測試與主動溫控（ATC）獨霸市場：</strong> AI 晶片功耗衝上 1,500W-2,000W+，測試過程極易熱失控。致茂獨家 ATC 技術結合新一代 Micro-channel Lid，帶動機台 ASP 顯著倍增，預計 2026 年 SLT 業務年增達 200%。</div>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="font-bold text-emerald-700 shrink-0">2.</span>
+              <div><strong class="text-slate-900">深度綑綁晶圓代工龍頭先進封裝產線：</strong> 光學量測（Metrology）設備成功切入台積電 CoWoS 與 WMCM（晶圓級多晶片模組）關鍵檢測，隨 AP7 新廠產能於 2026 年底由月產 1,000 片跳升至 5,000 片以上，設備出貨動能強勁。</div>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="font-bold text-emerald-700 shrink-0">3.</span>
+              <div><strong class="text-slate-900">資料中心 800V HVDC 架構升級大浪潮：</strong> GB200/NVL72 機櫃功耗飆升至 120kW+，推動電源由 400V 轉向 800V 直流高壓，激發 PSU、BBU 與高壓電容全面替換測試設備，推升電力電子部門 AI 業務佔比破 60%。</div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Key Risks -->
+        <div class="bg-amber-50/60 border border-amber-200 rounded-xl p-6">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="bg-amber-600 text-white font-bold rounded-full w-6 h-6 flex items-center justify-center text-xs">!</span>
+            <h3 class="text-lg font-bold text-amber-900">3 大核心風險警訊 (Key Risks)</h3>
+          </div>
+          <ul class="space-y-3 text-sm text-slate-700">
+            <li class="flex items-start gap-2">
+              <span class="font-bold text-amber-700 shrink-0">1.</span>
+              <div><strong class="text-slate-900">CSP 北美雲端巨頭資本支出遞延：</strong> 若終端 AI 應用變現回報率不如預期，CSP 業者若調降或放緩機櫃資本支出，將沿供應鏈向上抑制高階測試機台之拉貨力道。</div>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="font-bold text-amber-700 shrink-0">2.</span>
+              <div><strong class="text-slate-900">歷史高位本益比（P/E > 55x）修復風險：</strong> 當前歷史 Trailing P/E 位於歷史高軌頂端（全市場 86 百分位），若單季毛利率因產品組合短期波動跌破 60%，極易引發法人獲利結算賣壓。</div>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="font-bold text-amber-700 shrink-0">3.</span>
+              <div><strong class="text-slate-900">次世代 CPO 與微通道蓋板技術驗證時程：</strong> CPO 屬前瞻封裝技術，若客戶技術路徑變更或晶圓封裝良率爬坡放緩，可能導致 2027 年相關 ASP 與營收認列曲線平緩化。</div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: BUSINESS & MOAT -->
+    <section id="section-business" class="space-y-6 hidden">
+      <!-- Introductory Paragraph -->
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        <h2 class="text-xl font-bold text-slate-900 mb-2">二、業務架構、營收拆解與競爭護城河</h2>
+        <p class="text-slate-600 leading-relaxed text-sm">
+          致茂成立於 1984 年，以自有品牌「Chroma」行銷全球，研發費用率長年高於 9%，擁有逾 600 項全球專利與 100 項核心技術。公司由傳統量測儀器廠，成功演化為跨越「電力電子」與「半導體/光電檢測」的系統級架構商。本節深入剖析致茂四大成長引擎與波特五力模型護城河。
+        </p>
+      </div>
+
+      <!-- Donut Chart & Segment Breakdown Table -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+        <div class="md:col-span-5 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+          <h3 class="text-base font-bold text-slate-800 mb-2">致茂事業部營收佔比結構 (2025-2026E)</h3>
+          <p class="text-xs text-slate-500 mb-4">半導體與高階電力電子成為均衡雙引擎</p>
+          <div class="chart-container">
+            <canvas id="chartRevenueMix"></canvas>
+          </div>
+        </div>
+
+        <div class="md:col-span-7 bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+          <div>
+            <h3 class="text-base font-bold text-slate-800 mb-3">四大核心業務戰略定位與成長動能</h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-100 text-slate-700 font-semibold border-b">
+                    <th class="p-2.5">業務類別</th>
+                    <th class="p-2.5">關鍵技術與產品</th>
+                    <th class="p-2.5">終端應用與客戶</th>
+                    <th class="p-2.5 text-right">預期成長動能</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  <tr>
+                    <td class="p-2.5 font-bold text-blue-900">半導體與光電測試</td>
+                    <td class="p-2.5">SLT 系統級測試、ATC 主動溫控、CoWoS/WMCM 量測</td>
+                    <td class="p-2.5">NVIDIA GPU、雲端 ASIC、台積電 CoWoS 產線</td>
+                    <td class="p-2.5 text-right font-bold text-emerald-600">2026E +200% YoY</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-bold text-slate-800">電力電子與自動化</td>
+                    <td class="p-2.5">800V HVDC 直流測試、PSU/BBU 測試機組</td>
+                    <td class="p-2.5">AI 伺服器電源、GB200 機櫃、高壓電容廠</td>
+                    <td class="p-2.5 text-right font-bold text-emerald-600">2026E +53% YoY</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-bold text-slate-800">綠能與儲能檢測</td>
+                    <td class="p-2.5">電池芯/模組化成設備、ESS 儲能系統檢測</td>
+                    <td class="p-2.5">電動車動力電池（TE）、電網級儲能（EM）</td>
+                    <td class="p-2.5 text-right font-semibold text-slate-600">穩健現金流底座</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-bold text-slate-800">自動化運輸與其他</td>
+                    <td class="p-2.5">潔淨室自動化運輸（AMHS）、特種材料</td>
+                    <td class="p-2.5">半導體晶圓代工廠、高階面板廠</td>
+                    <td class="p-2.5 text-right font-semibold text-slate-600">提供 Turnkey 整合</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="mt-4 p-3 bg-blue-50 text-blue-900 rounded-lg text-xs leading-relaxed">
+            <strong>外銷導向優勢：</strong> 外銷佔比達 87%，全球據點涵蓋美洲、歐洲、日本與東南亞，精準對接 CSP 與晶圓龍頭全球擴產重組。
+          </div>
+        </div>
+      </div>
+
+      <!-- Porter's 5 Forces Moat Grid -->
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        <h3 class="text-base font-bold text-slate-900 mb-4">致茂產業競爭護城河：波特五力模型 (Porter's 5 Forces)</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 text-xs">
+          <div class="p-4 rounded-lg bg-slate-50 border border-slate-200">
+            <div class="font-bold text-slate-900 text-sm mb-1 text-blue-800">1. 供應商議價力</div>
+            <div class="font-semibold text-emerald-600 mb-2">【極低 / 優勢】</div>
+            <p class="text-slate-600">具備電力電子與光學軟硬體自主開發能力，供應鏈關鍵零組件多自研自產，不受單一供應商制約。</p>
+          </div>
+          <div class="p-4 rounded-lg bg-slate-50 border border-slate-200">
+            <div class="font-bold text-slate-900 text-sm mb-1 text-blue-800">2. 買方議價力</div>
+            <div class="font-semibold text-emerald-600 mb-2">【低 / 高定價權】</div>
+            <p class="text-slate-600">ATC 主動溫控與 SLT 解決方案獨家綁定 GPU 巨擘，客戶轉換供應商代價極高，使毛利率守住 60%+。</p>
+          </div>
+          <div class="p-4 rounded-lg bg-slate-50 border border-slate-200">
+            <div class="font-bold text-slate-900 text-sm mb-1 text-blue-800">3. 潛在進入者威脅</div>
+            <div class="font-semibold text-emerald-600 mb-2">【極低 / 高壁壘】</div>
+            <p class="text-slate-600">光、機、電、熱、軟體跨領域整合門檻極高，需長達 3-5 年認證期，新進者難以複製其生態系。</p>
+          </div>
+          <div class="p-4 rounded-lg bg-slate-50 border border-slate-200">
+            <div class="font-bold text-slate-900 text-sm mb-1 text-blue-800">4. 替代品威脅</div>
+            <div class="font-semibold text-emerald-600 mb-2">【極低】</div>
+            <p class="text-slate-600">晶片結構複雜化使傳統純電性 CP/FT 測試無法檢出瑕疵，SLT 系統級測試與 Metrology 為不可替代之剛需。</p>
+          </div>
+          <div class="p-4 rounded-lg bg-slate-50 border border-slate-200">
+            <div class="font-bold text-slate-900 text-sm mb-1 text-blue-800">5. 現有競爭者對抗</div>
+            <div class="font-semibold text-amber-600 mb-2">【中等 / 寡占】</div>
+            <p class="text-slate-600">全球 SLT 設備市佔第四，於高功率溫控與 CoWoS 檢測領域幾乎無直接同等規模之台廠競爭對手。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: FINANCIALS -->
+    <section id="section-financials" class="space-y-6 hidden">
+      <!-- Introductory Paragraph -->
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        <h2 class="text-xl font-bold text-slate-900 mb-2">三、財務數據透視與未來獲利預測 (2022 - 2027E)</h2>
+        <p class="text-slate-600 leading-relaxed text-sm">
+          致茂自 2024 年迎來非線性獲利爆發期。2025 年營收達 283.11 億元，EPS 翻倍改寫至 27.70 元；2026 年僅上半季 EPS 即攻上 21.27 元，1-8 月累計營收突破 364.56 億元 (+108.4% YoY)。隨著高毛利的 SLT 與光學量測機台比重飆升，營業利益率一路由 2022 年的 23.45% 陡峭攀升至 2026 年上半年的 38.70%。
+        </p>
+      </div>
+
+      <!-- Financial Charts Row -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Chart 1: Revenue & EPS Expansion -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+          <h3 class="text-base font-bold text-slate-800 mb-1">合併營收與每股盈餘 (EPS) 飛躍軌跡</h3>
+          <p class="text-xs text-slate-500 mb-4">2026E-2027E 獲利成長斜率顯著超越營收斜率</p>
+          <div class="chart-container">
+            <canvas id="chartFinancialGrowth"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 2: Profit Margins -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+          <h3 class="text-base font-bold text-slate-800 mb-1">獲利三率（毛利率、營益率、淨利率）走勢圖</h3>
+          <p class="text-xs text-slate-500 mb-4">高附加價值產品組合推升營益率衝向 38%+</p>
+          <div class="chart-container">
+            <canvas id="chartMargins"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Full Financial Data Table -->
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        <h3 class="text-base font-bold text-slate-800 mb-4">歷年與前瞻財務數據對照表 (財務綜合明細)</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-center border-collapse">
+            <thead>
+              <tr class="bg-slate-800 text-white font-semibold">
+                <th class="p-3 text-left">財務指標 (億元 / 元)</th>
+                <th class="p-3">2022 年</th>
+                <th class="p-3">2023 年</th>
+                <th class="p-3">2024 年</th>
+                <th class="p-3">2025 年</th>
+                <th class="p-3 bg-blue-900">2026 年 1-8M / 1H</th>
+                <th class="p-3 bg-blue-900">2026E (預估)</th>
+                <th class="p-3 bg-emerald-900">2027E (預估)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 text-slate-700">
+              <tr class="hover:bg-slate-50">
+                <td class="p-2.5 text-left font-bold text-slate-900">合併營業收入</td>
+                <td class="p-2.5">220.68</td>
+                <td class="p-2.5">186.97</td>
+                <td class="p-2.5">216.04</td>
+                <td class="p-2.5">283.11</td>
+                <td class="p-2.5 font-bold text-blue-700">364.56 (1-8M)</td>
+                <td class="p-2.5 font-bold text-blue-700">522.00</td>
+                <td class="p-2.5 font-bold text-emerald-700">680.00</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="p-2.5 text-left font-bold text-slate-900">營收年增率 (YoY)</td>
+                <td class="p-2.5">+25.8%</td>
+                <td class="p-2.5">-15.3%</td>
+                <td class="p-2.5">+15.6%</td>
+                <td class="p-2.5">+31.0%</td>
+                <td class="p-2.5 font-bold text-emerald-600">+108.4%</td>
+                <td class="p-2.5 font-bold text-emerald-600">+84.4%</td>
+                <td class="p-2.5 font-bold text-emerald-600">+30.3%</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="p-2.5 text-left font-bold text-slate-900">營業毛利率 (GM)</td>
+                <td class="p-2.5">54.12%</td>
+                <td class="p-2.5">56.40%</td>
+                <td class="p-2.5">59.00%</td>
+                <td class="p-2.5">61.00%</td>
+                <td class="p-2.5 font-bold">60.50%</td>
+                <td class="p-2.5 font-bold text-blue-700">61.50%</td>
+                <td class="p-2.5 font-bold text-emerald-700">62.80%</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="p-2.5 text-left font-bold text-slate-900">營業利益率 (OPM)</td>
+                <td class="p-2.5">23.45%</td>
+                <td class="p-2.5">22.80%</td>
+                <td class="p-2.5">25.10%</td>
+                <td class="p-2.5">32.00%</td>
+                <td class="p-2.5 font-bold text-blue-700">38.70%</td>
+                <td class="p-2.5 font-bold text-blue-700">39.20%</td>
+                <td class="p-2.5 font-bold text-emerald-700">41.50%</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="p-2.5 text-left font-bold text-slate-900">每股稅後純益 (EPS)</td>
+                <td class="p-2.5">12.14 元</td>
+                <td class="p-2.5">9.45 元</td>
+                <td class="p-2.5">12.49 元</td>
+                <td class="p-2.5">27.70 元</td>
+                <td class="p-2.5 font-bold text-blue-700">21.27 元 (1H)</td>
+                <td class="p-2.5 font-bold text-blue-700">44.40 元</td>
+                <td class="p-2.5 font-bold text-emerald-700">65.70 元</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="p-2.5 text-left font-bold text-slate-900">每股現金股利</td>
+                <td class="p-2.5">8.00 元</td>
+                <td class="p-2.5">6.60 元</td>
+                <td class="p-2.5">9.00 元</td>
+                <td class="p-2.5">19.50 元</td>
+                <td class="p-2.5">—</td>
+                <td class="p-2.5">30.00 元 (E)</td>
+                <td class="p-2.5">45.00 元 (E)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: VALUATION & CALCULATOR -->
+    <section id="section-valuation" class="space-y-6 hidden">
+      <!-- Introductory Paragraph -->
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        <h2 class="text-xl font-bold text-slate-900 mb-2">四、市場估值演進與動態目標價試算器 (Valuation Workbench)</h2>
+        <p class="text-slate-600 leading-relaxed text-sm">
+          隨著致茂躋身台股千金股與市值指標，市場評價邏輯已由傳統設備廠的 20x-30x 估值，重估至先進半導體設備龍頭位階 (35x-45x Forward P/E)。下方提供外資券商共識目標價對照表，並建置動態目標價敏感度試算器，供您自由調整預估 EPS 與前瞻本益比，進行壓力測試與獲利空間演算。
+        </p>
+      </div>
+
+      <!-- Interactive Calculator Section -->
+      <div class="bg-gradient-to-br from-slate-900 to-blue-950 text-white p-6 rounded-xl shadow-lg">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-4 mb-6">
+          <div>
+            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+              <span>🧮</span> 致茂動態目標價敏感度試算器 (Target Price Simulator)
+            </h3>
+            <p class="text-xs text-slate-400">滑動下方控制桿，實時演算不同 EPS 與前瞻 P/E 倍數下的隱含目標價與潛在報酬率</p>
+          </div>
+          <div class="bg-blue-600/30 border border-blue-500/40 px-4 py-2 rounded-lg text-right">
+            <div class="text-xs text-blue-300">試算目標價 (Calculated Target)</div>
+            <div id="simulatedPrice" class="text-2xl font-extrabold text-emerald-400">NT$ 2,956</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <!-- Controls -->
+          <div class="space-y-6">
+            <div>
+              <div class="flex justify-between text-sm mb-2">
+                <label for="inputEPS" class="font-semibold text-slate-300">預估每股盈餘 (EPS)</label>
+                <span id="labelEPS" class="font-bold text-emerald-400">65.70 元 (2027E 美銀/花旗共識)</span>
+              </div>
+              <input type="range" id="inputEPS" min="35.0" max="80.0" step="0.5" value="65.7" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500">
+              <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                <span>35.0 元 (熊市底線)</span>
+                <span>44.4 元 (2026E)</span>
+                <span>65.7 元 (2027E)</span>
+                <span>80.0 元 (牛市樂觀)</span>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-sm mb-2">
+                <label for="inputPE" class="font-semibold text-slate-300">目標前瞻本益比 (Forward P/E)</label>
+                <span id="labelPE" class="font-bold text-emerald-400">45.0 倍 (高階半導體重估倍數)</span>
+              </div>
+              <input type="range" id="inputPE" min="20.0" max="60.0" step="1.0" value="45.0" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500">
+              <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                <span>20.0x (歷史低軌)</span>
+                <span>30.0x (常態中位)</span>
+                <span>45.0x (外資目標)</span>
+                <span>60.0x (歷史高軌頂端)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic Output Metrics -->
+          <div class="bg-slate-800/80 p-5 rounded-lg border border-slate-700 flex flex-col justify-between space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+              <div class="p-3 bg-slate-900/60 rounded border border-slate-700/60">
+                <div class="text-[11px] text-slate-400">現價對比 (VS Current NT$2190)</div>
+                <div id="simulatedReturn" class="text-xl font-bold text-emerald-400 mt-1">+35.0%</div>
+              </div>
+              <div class="p-3 bg-slate-900/60 rounded border border-slate-700/60">
+                <div class="text-[11px] text-slate-400">隱含總市值 (Market Cap)</div>
+                <div id="simulatedMarketCap" class="text-xl font-bold text-white mt-1">1.25 兆元</div>
+              </div>
+            </div>
+
+            <div class="p-3 bg-blue-950/80 rounded border border-blue-800/50 text-xs text-blue-200 leading-relaxed">
+              <strong>分析師估值解讀：</strong> <span id="valuationInsight">當前前瞻本益比折算 2027E 獲利僅 33.3 倍。若給予半導體先進封裝設備龍頭級之 45 倍 P/E，目標價即落於 NT$ 2,950–3,050 元區間。</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Broker Consensus Table -->
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        <h3 class="text-base font-bold text-slate-900 mb-3">內外資頂尖研究機構目標價與評級明細 (Broker Consensus)</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-100 text-slate-700 font-semibold border-b">
+                <th class="p-3">研究機構 (Broker)</th>
+                <th class="p-3">投資評級</th>
+                <th class="p-3">目標價 (NT$)</th>
+                <th class="p-3">2026E EPS</th>
+                <th class="p-3">2027E EPS</th>
+                <th class="p-3">核心投資邏輯摘要</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-700">
+              <tr class="hover:bg-slate-50">
+                <td class="p-3 font-bold text-slate-900">花旗環球證券 (Citi)</td>
+                <td class="p-3"><span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">買進</span></td>
+                <td class="p-3 font-bold text-emerald-600">2,500 – 3,050</td>
+                <td class="p-3">44.15 元</td>
+                <td class="p-3 font-bold">65.70 元</td>
+                <td class="p-3">GPU SLT、CoWoS 量測與 HVDC 需求同步吃緊，產能能見度直達 2027 年。</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="p-3 font-bold text-slate-900">美銀證券 (BofA)</td>
+                <td class="p-3"><span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">買進</span></td>
+                <td class="p-3 font-bold text-emerald-600">3,050</td>
+                <td class="p-3">45.00 元</td>
+                <td class="p-3 font-bold">66.00 元</td>
+                <td class="p-3">CPO 光子檢測與高功耗 ATC 溫控模組建立長期護城河，獲利進入非線性擴張期。</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="p-3 font-bold text-slate-900">瑞銀證券 (UBS)</td>
+                <td class="p-3"><span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">買進</span></td>
+                <td class="p-3 font-bold text-emerald-600">2,960</td>
+                <td class="p-3">45.18 元</td>
+                <td class="p-3 font-bold">65.70 元</td>
+                <td class="p-3">預估 2026 年營收達 542 億元，受惠先進封裝 Metrology 設備滲透率超預期。</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="p-3 font-bold text-slate-900">本土券商綜合共識</td>
+                <td class="p-3"><span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">看多</span></td>
+                <td class="p-3 font-bold text-emerald-600">2,500 – 2,975</td>
+                <td class="p-3">38.93 – 44.40 元</td>
+                <td class="p-3 font-bold">62.00 – 65.70 元</td>
+                <td class="p-3">預估 2026 年獲利年增 60%，以 2027 年獲利推算，前瞻 P/E 具重新擴張至 40x 潛力。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: CHIP FLOW & RISK -->
+    <section id="section-chips" class="space-y-6 hidden">
+      <!-- Introductory Paragraph -->
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        <h2 class="text-xl font-bold text-slate-900 mb-2">五、籌碼結構動向、紅旗警訊與熊市情境分析</h2>
+        <p class="text-slate-600 leading-relaxed text-sm">
+          籌碼面為致茂股價提供穩固的下檔流動性支撐。外資長期掌控近六成邊際定價權（持股 59.67%），前十大股東與機構法人籌碼集中度超過 70.10%，且融資使用率極低 (&lt;0.39%)，顯示籌碼沉澱於極為「穩定的手」中。然而，投資人仍須密切檢視歷史高本益比修正風險與 CSP 下修資本支出之熊市情境。
+        </p>
+      </div>
+
+      <!-- Chip Ownership & Structure -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+        <div class="md:col-span-5 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+          <h3 class="text-base font-bold text-slate-800 mb-2">致茂股東結構與籌碼分佈 (Ownership Structure)</h3>
+          <p class="text-xs text-slate-500 mb-4">外資與長線機構掌控超過七成籌碼</p>
+          <div class="chart-container">
+            <canvas id="chartChips"></canvas>
+          </div>
+        </div>
+
+        <div class="md:col-span-7 bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+          <div>
+            <h3 class="text-base font-bold text-slate-800 mb-3">籌碼動向與資金沉澱解析</h3>
+            <div class="space-y-3 text-xs">
+              <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <div class="font-bold text-slate-900 mb-1 text-blue-900">1. 外資機構邊際定價權強勢：</div>
+                <p class="text-slate-600">外資持股比重常年維持於 59.67% 高水位（持有約 25.37 萬張），主力籌碼多來自全球主權基金、壽險及被動式科技 ETF，無短線散戶倒貨疑慮。</p>
+              </div>
+              <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <div class="font-bold text-slate-900 mb-1 text-blue-900">2. 千張大戶與內部人籌碼集中：</div>
+                <p class="text-slate-600">千張大戶持股比例達 52.66%，董監持股 6.19% (大股東合計 33.12%)。籌碼處於高度「沉澱」狀態而非「發散」。</p>
+              </div>
+              <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <div class="font-bold text-slate-900 mb-1 text-blue-900">3. 槓桿極低，零融資斷頭風險：</div>
+                <p class="text-slate-600">散戶融資餘額僅佔股本約 0.39%，融券接近零，市場槓桿極低，洗盤時不易引發連鎖停損多殺多賣壓。</p>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 p-3 bg-amber-50 text-amber-900 rounded-lg text-xs">
+            <strong>籌碼結論：</strong> 主力籌碼鎖定極佳，大戶換手多在法人與投信之間，股價回檔多為長線資金尋求重新建倉之買點。
+          </div>
+        </div>
+      </div>
+
+      <!-- Bear Case & Red Flag Analysis Table -->
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        <h3 class="text-base font-bold text-slate-900 mb-3 text-amber-900 flex items-center gap-2">
+          <span>⚠️</span> 熊市情境分析與壓力測試 (Bear Case Scenario Analysis)
+        </h3>
+        <p class="text-xs text-slate-500 mb-4">若極端負面因子同時發生，致茂之基本面與估值下行空間測算</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left border-collapse">
+            <thead>
+              <tr class="bg-amber-100/60 text-amber-900 font-semibold border-b border-amber-200">
+                <th class="p-3">熊市觸發因子 (Trigger Event)</th>
+                <th class="p-3">對營運與財務之實質影響</th>
+                <th class="p-3">獲利與 P/E 修正估算</th>
+                <th class="p-3">熊市支撐價位 (Bear Target)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-700">
+              <tr>
+                <td class="p-3 font-bold text-slate-900">CSP 下修 2026-2027 資本支出 20%</td>
+                <td class="p-3">AI 伺服器電源與 SLT 測試機台訂單延後 2-3 季認列，電力電子部門年增率由 +53% 放緩至 +15%。</td>
+                <td class="p-3">2026E EPS 下修至 35.0 元<br>2027E EPS 下修至 45.0 元</td>
+                <td class="p-3 font-bold text-amber-700" rowspan="3">
+                  <div class="text-base font-extrabold">NT$ 1,350 - 1,575</div>
+                  <div class="text-[10px] text-slate-500 font-normal">對應熊市 EPS 45元 x 30x 常態 P/E 底線</div>
+                </td>
+              </tr>
+              <tr>
+                <td class="p-3 font-bold text-slate-900">毛利率因產品組合波動跌破 58%</td>
+                <td class="p-3">若綠能儲能低毛利專案佔比意外拉高，或 SLT 認列進度延後，引發高估值法人獲利結算賣壓。</td>
+                <td class="p-3">前瞻 P/E 由 45x 壓縮至 30x 常態區間</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-bold text-slate-900">美歐地緣政治擴大封裝測試管制</td>
+                <td class="p-3">非美系客戶高階測試機台推廣受阻，CPO 新專案商轉時程平緩化。</td>
+                <td class="p-3">估值估價乘數溢價消失</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-slate-900 text-slate-400 py-6 border-t border-slate-800 text-xs mt-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-2">
+      <p>本報告由「首席資深股權研究分析師團隊」製作，數據源自公開資訊觀測站、公司法說會與外資券商研究報告。</p>
+      <p>免責聲明：本儀表板僅供研究與分析參考，不構成任何投資買賣建議。投資人應獨立評估風險並自負盈虧。</p>
+    </div>
+  </footer>
+
+  <!-- JavaScript Logic for Interactivity & Chart.js -->
+  <script>
+    // Tab Switching Logic
+    function switchTab(tabId) {
+      const tabs = ['overview', 'business', 'financials', 'valuation', 'chips'];
+      tabs.forEach(id => {
+        const section = document.getElementById(`section-${id}`);
+        const tabBtn = document.getElementById(`tab-${id}`);
+        if (id === tabId) {
+          section.classList.remove('hidden');
+          tabBtn.classList.add('active');
+        } else {
+          section.classList.add('hidden');
+          tabBtn.classList.remove('active');
+        }
+      });
+    }
+
+    // Chart.js Setup on DOM Load
+    document.addEventListener('DOMContentLoaded', () => {
+      // Common Chart Options
+      const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+          tooltip: {
+            callbacks: {
+              title: (items) => items[0].label.length > 16 ? items[0].label.substring(0, 16) + '...' : items[0].label
+            }
+          }
+        }
+      };
+
+      // 1. Revenue Mix Donut Chart
+      const ctxRevenueMix = document.getElementById('chartRevenueMix').getContext('2d');
+      new Chart(ctxRevenueMix, {
+        type: 'doughnut',
+        data: {
+          labels: ['半導體與光電測試 (SLT/CoWoS)', '電力電子與自動化 (HVDC/PSU)', '綠能與儲能檢測 (ESS/EV)', '自動化運輸工程與其他'],
+          datasets: [{
+            data: [42, 38, 14, 6],
+            backgroundColor: ['#1E3A8A', '#2563EB', '#059669', '#94A3B8'],
+            borderWidth: 2,
+            borderColor: '#FFFFFF'
+          }]
+        },
+        options: {
+          ...commonOptions,
+          plugins: {
+            ...commonOptions.plugins,
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return ` ${context.label}: ${context.raw}% (營收比重)`;
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // 2. Financial Growth Combo Chart
+      const ctxGrowth = document.getElementById('chartFinancialGrowth').getContext('2d');
+      new Chart(ctxGrowth, {
+        type: 'bar',
+        data: {
+          labels: ['2022年', '2023年', '2024年', '2025年', '2026E', '2027E'],
+          datasets: [
+            {
+              type: 'bar',
+              label: '合併營收 (億元)',
+              data: [220.68, 186.97, 216.04, 283.11, 522.00, 680.00],
+              backgroundColor: '#93C5FD',
+              borderRadius: 4,
+              yAxisID: 'y'
+            },
+            {
+              type: 'line',
+              label: '每股盈餘 EPS (元)',
+              data: [12.14, 9.45, 12.49, 27.70, 44.40, 65.70],
+              borderColor: '#059669',
+              backgroundColor: '#059669',
+              borderWidth: 3,
+              pointRadius: 5,
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          ...commonOptions,
+          scales: {
+            y: {
+              type: 'linear',
+              display: true,
+              position: 'left',
+              title: { display: true, text: '營收 (億元)', font: { size: 10 } }
+            },
+            y1: {
+              type: 'linear',
+              display: true,
+              position: 'right',
+              grid: { drawOnChartArea: false },
+              title: { display: true, text: 'EPS (元)', font: { size: 10 } }
+            }
+          }
+        }
+      });
+
+      // 3. Profit Margins Chart
+      const ctxMargins = document.getElementById('chartMargins').getContext('2d');
+      new Chart(ctxMargins, {
+        type: 'line',
+        data: {
+          labels: ['2022年', '2023年', '2024年', '2025年', '2026 1H', '2026E', '2027E'],
+          datasets: [
+            {
+              label: '營業毛利率 (GM %)',
+              data: [54.12, 56.40, 59.00, 61.00, 60.50, 61.50, 62.80],
+              borderColor: '#1E3A8A',
+              backgroundColor: '#1E3A8A',
+              borderWidth: 2,
+              tension: 0.2
+            },
+            {
+              label: '營業利益率 (OPM %)',
+              data: [23.45, 22.80, 25.10, 32.00, 38.70, 39.20, 41.50],
+              borderColor: '#2563EB',
+              backgroundColor: '#2563EB',
+              borderWidth: 2,
+              tension: 0.2
+            },
+            {
+              label: '稅後淨利率 (NM %)',
+              data: [23.10, 21.20, 24.36, 41.30, 36.22, 36.80, 38.20],
+              borderColor: '#D97706',
+              backgroundColor: '#D97706',
+              borderDash: [4, 4],
+              borderWidth: 2,
+              tension: 0.2
+            }
+          ]
+        },
+        options: {
+          ...commonOptions,
+          scales: {
+            y: {
+              min: 15,
+              max: 70,
+              title: { display: true, text: '百分比 (%)', font: { size: 10 } }
+            }
+          }
+        }
+      });
+
+      // 4. Chip Ownership Structure Pie Chart
+      const ctxChips = document.getElementById('chartChips').getContext('2d');
+      new Chart(ctxChips, {
+        type: 'pie',
+        data: {
+          labels: ['外資機構持股 (59.67%)', '國內投信持股 (6.57%)', '董監事與大股東 (6.19%)', '其他與散戶持股 (27.57%)'],
+          datasets: [{
+            data: [59.67, 6.57, 6.19, 27.57],
+            backgroundColor: ['#1E3A8A', '#2563EB', '#D97706', '#CBD5E1'],
+            borderWidth: 2,
+            borderColor: '#FFFFFF'
+          }]
+        },
+        options: commonOptions
+      });
+
+      // Interactive Valuation Calculator Logic
+      const inputEPS = document.getElementById('inputEPS');
+      const inputPE = document.getElementById('inputPE');
+      const labelEPS = document.getElementById('labelEPS');
+      const labelPE = document.getElementById('labelPE');
+      const simulatedPrice = document.getElementById('simulatedPrice');
+      const simulatedReturn = document.getElementById('simulatedReturn');
+      const simulatedMarketCap = document.getElementById('simulatedMarketCap');
+      const valuationInsight = document.getElementById('valuationInsight');
+
+      const currentPrice = 2190.0;
+      const shareCount = 4.25; // 4.25 億股
+
+      function updateCalculator() {
+        const eps = parseFloat(inputEPS.value);
+        const pe = parseFloat(inputPE.value);
+        const targetPrice = eps * pe;
+        const returnPct = ((targetPrice - currentPrice) / currentPrice) * 100;
+        const marketCapVal = (targetPrice * shareCount) / 10; // 轉為億/兆元
+
+        labelEPS.innerText = `${eps.toFixed(2)} 元`;
+        labelPE.innerText = `${pe.toFixed(1)} 倍`;
+        simulatedPrice.innerText = `NT$ ${Math.round(targetPrice).toLocaleString()}`;
+        
+        if (returnPct >= 0) {
+          simulatedReturn.innerText = `+${returnPct.toFixed(1)}%`;
+          simulatedReturn.className = 'text-xl font-bold text-emerald-400 mt-1';
+        } else {
+          simulatedReturn.innerText = `${returnPct.toFixed(1)}%`;
+          simulatedReturn.className = 'text-xl font-bold text-amber-400 mt-1';
+        }
+
+        if (marketCapVal >= 10) {
+          simulatedMarketCap.innerText = `${(marketCapVal / 10).toFixed(2)} 兆元`;
+        } else {
+          simulatedMarketCap.innerText = `${(marketCapVal * 1000).toFixed(0)} 億元`;
+        }
+
+        // Dynamic Narrative Logic
+        if (pe >= 45) {
+          valuationInsight.innerHTML = `當前設定屬於<strong>【先進半導體龍頭溢價評價】</strong>（P/E >= 45x）。若致茂在 CoWoS 量測與 CPO 出貨超預期，目標價為 <strong>NT$ ${Math.round(targetPrice)} 元</strong>。`;
+        } else if (pe >= 30) {
+          valuationInsight.innerHTML = `當前設定屬於<strong>【AI 算力擴張期常態評價】</strong>（P/E 30x–45x）。反映穩定增長之基本面，目標價為 <strong>NT$ ${Math.round(targetPrice)} 元</strong>。`;
+        } else {
+          valuationInsight.innerHTML = `當前設定屬於<strong>【保守/熊市情境評價】</strong>（P/E < 30x）。估值低於外資共識，隱含目標價為 <strong>NT$ ${Math.round(targetPrice)} 元</strong>。`;
+        }
+      }
+
+      inputEPS.addEventListener('input', updateCalculator);
+      inputPE.addEventListener('input', updateCalculator);
+      updateCalculator();
+    });
+  </script>
+</body>
+</html>
