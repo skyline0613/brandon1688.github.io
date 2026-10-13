@@ -1,0 +1,45 @@
+name: Auto Generate Index
+
+on:
+  push:
+    branches:
+      - master  # 如果你的預設分支名稱是 master，請將這裡改成 master
+    paths:
+      - '**.html' # 當有任何 html 檔案變動或新增時，才會觸發此動作
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    # 賦予 Action 寫入你的 Repository 的權限
+    permissions:
+      contents: write
+
+    steps:
+      # 1. 複製程式碼到執行環境
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. 設定 Python 環境
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      # 3. 執行剛剛寫好的腳本，動態生成全新的 index.html
+      - name: Generate index.html
+        run: python generate_index.py
+
+      # 4. 檢查 index.html 是否有變更，如果有，自動 Commit 並 Push 回去
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@://github.com"
+          git add index.html
+          # 檢查是否有內容變化，沒有變化就跳過，不製造無謂的 Commit
+          if git diff --staged --quiet; then
+            echo "沒有任何變化，跳過 Commit。"
+          else
+            git commit -m "chore: 自動更新 index.html 檔案列表"
+            git push
+          fi

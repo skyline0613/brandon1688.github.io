@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>台達電 (2308) 深度股權研究報告 | 互動分析平台</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+            },
+            slatebg: '#f8fafc',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .chart-container {
+      position: relative;
+      width: 100%;
+      max-width: 650px;
+      margin-left: auto;
+      margin-right: auto;
+      height: 320px;
+      max-height: 400px;
+    }
+    @media (min-width: 768px) {
+      .chart-container {
+        height: 360px;
+      }
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-slatebg text-slate-800 font-sans antialiased">
+
+  <!-- Chosen Palette: Warm Neutral & Financial Emerald (Slate #1e293b, Neutral Light #f8fafc, Emerald Accent #059669, Indigo Secondary #4f46e5) -->
+  
+  <!-- Application Structure Plan:
+    1. Hero Header & Quick Key Metrics Dashboard: Top-level summary (TTM EPS, 2026E EPS, Target Price Range, Rating: BUY).
+    2. Interactive Tab Navigation:
+       - Tab 1: 業務概覽與護城河 (Revenue Mix Donut, Porter's 5 Forces Cards, Grid-to-Chip Value Chain)
+       - Tab 2: 財務深度透視 (Historical Revenue/Margin Bar-Line Chart, Financial Table, CapEx Expansion)
+       - Tab 3: AI & 液冷成長引擎 (Interactive Tech Matrix, Liquid CDU vs Air Cooling, Global MFG Map)
+       - Tab 4: 籌碼動向與市場估值 (Institutional Ownership Donut, PE Valuation Bands, Analyst Target Price Breakdown)
+       - Tab 5: 熊市情境與投資評級 (Interactive Valuation Calculator, Risk Matrix, Final Thesis & 12M Target)
+    Rationale: Allows high-level overview for executives while providing deep dive interactivity for detailed research without overloading the screen.
+  -->
+
+  <!-- Visualization & Content Choices:
+    - Revenue Breakdown: Chart.js Donut (2025 vs 2026Q3 shift)
+    - Financial Trend: Chart.js Combo Chart (Revenue Bars + Margin Lines)
+    - Institutional Chips: Chart.js Pie Chart (Foreign, Investment Trust, Major Shareholders)
+    - Target Price Matrix: Chart.js Horizontal Bar Chart comparing Wall St targets.
+    - Interactive Tech Table & Risk Scenario Calculator: JS-powered interactive dynamic widgets.
+    - NO SVG and NO Mermaid used. Unicode icons and standard Tailwind markup utilized.
+  -->
+
+  <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+  <!-- Top Navigation Bar -->
+  <header class="bg-slate-900 text-white sticky top-0 z-50 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <span class="bg-brand-600 text-white font-bold text-lg px-2.5 py-1 rounded">2308</span>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight">台達電子 Delta Electronics</h1>
+          <p class="text-xs text-slate-400">首席資深股權研究報告 | 伺服器電源與液冷散熱雙引擎</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-4 mt-2 sm:mt-0">
+        <span class="text-xs bg-emerald-900/80 text-emerald-300 border border-emerald-700 px-3 py-1 rounded-full font-semibold">評級：買入 (BUY)</span>
+        <span class="text-xs bg-slate-800 text-slate-300 px-3 py-1 rounded-full">目標價：NT$ 2,308 - 3,000+</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Executive Metric Highlights Section -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">
+    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+      <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">關鍵財務與籌碼指標概覽 (Key Highlights)</h2>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div class="p-3 bg-slate-50 rounded-lg border border-slate-100">
+          <div class="text-xs text-slate-500">2026E EPS (共識)</div>
+          <div class="text-xl font-extrabold text-slate-900 mt-0.5">NT$ 38.42</div>
+          <div class="text-xs text-emerald-600 mt-1">最高預估達 $45.13</div>
+        </div>
+        <div class="p-3 bg-slate-50 rounded-lg border border-slate-100">
+          <div class="text-xs text-slate-500">TTM 每股盈餘</div>
+          <div class="text-xl font-extrabold text-slate-900 mt-0.5">NT$ 31.42</div>
+          <div class="text-xs text-slate-500 mt-1">奠定估值實質支撐</div>
+        </div>
+        <div class="p-3 bg-slate-50 rounded-lg border border-slate-100">
+          <div class="text-xs text-slate-500">AI 電源板端市占</div>
+          <div class="text-xl font-extrabold text-brand-600 mt-0.5">70% - 75%</div>
+          <div class="text-xs text-emerald-600 mt-1">Direct-to-Chip 壟斷</div>
+        </div>
+        <div class="p-3 bg-slate-50 rounded-lg border border-slate-100">
+          <div class="text-xs text-slate-500">外資持股比例</div>
+          <div class="text-xl font-extrabold text-slate-900 mt-0.5">61.61%</div>
+          <div class="text-xs text-slate-500 mt-1">大戶持股高達 73.95%</div>
+        </div>
+        <div class="p-3 bg-slate-50 rounded-lg border border-slate-100">
+          <div class="text-xs text-slate-500">2026 資本支出</div>
+          <div class="text-xl font-extrabold text-indigo-600 mt-0.5">~700 億</div>
+          <div class="text-xs text-indigo-600 mt-1">年增近 50% 強力擴產</div>
+        </div>
+        <div class="p-3 bg-slate-50 rounded-lg border border-slate-100">
+          <div class="text-xs text-slate-500">液冷系統 PUE 效能</div>
+          <div class="text-xl font-extrabold text-brand-600 mt-0.5">1.05</div>
+          <div class="text-xs text-emerald-600 mt-1">CDU 冷卻容量 3000kW</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Primary Interactive Navigation Tabs -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div class="border-b border-slate-200 bg-white rounded-t-xl px-2 pt-2">
+      <nav class="flex space-x-2 overflow-x-auto custom-scrollbar" aria-label="Tabs">
+        <button onclick="switchTab('tab1')" id="btn-tab1" class="tab-btn px-4 py-3 font-medium text-sm border-b-2 border-brand-600 text-brand-600 whitespace-nowrap">
+          1. 業務概覽與護城河
+        </button>
+        <button onclick="switchTab('tab2')" id="btn-tab2" class="tab-btn px-4 py-3 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap">
+          2. 財務深度透視
+        </button>
+        <button onclick="switchTab('tab3')" id="btn-tab3" class="tab-btn px-4 py-3 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap">
+          3. AI & 液冷成長引擎
+        </button>
+        <button onclick="switchTab('tab4')" id="btn-tab4" class="tab-btn px-4 py-3 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap">
+          4. 籌碼動向與估值重塑
+        </button>
+        <button onclick="switchTab('tab5')" id="btn-tab5" class="tab-btn px-4 py-3 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap">
+          5. 風險警訊與投資總結
+        </button>
+      </nav>
+    </div>
+
+    <!-- TAB 1: Business Model & Moat -->
+    <div id="tab1" class="tab-content bg-white p-6 rounded-b-xl border-x border-b border-slate-200 shadow-sm space-y-6">
+      <div>
+        <h3 class="text-lg font-bold text-slate-900 mb-1">一句話商業模式 (Core Value Proposition)</h3>
+        <p class="text-slate-600 leading-relaxed bg-emerald-50 border-l-4 border-brand-500 p-4 rounded-r-lg">
+          台達電靠做全球領先的<strong>高效率電力轉換器與散熱系統</strong>賺錢，已從單一零組件代工廠躍升為跨足「從電網到晶片 (Grid-to-Chip)」的全方位 AI 資料中心電力與熱管理解決方案巨擘。
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+        <!-- Revenue Segment Donut Chart -->
+        <div class="lg:col-span-6 bg-slate-50 p-5 rounded-xl border border-slate-200">
+          <div class="flex justify-between items-center mb-4">
+            <h4 class="font-bold text-slate-800 text-sm">營收結構動態位移 (Revenue Mix Shift)</h4>
+            <div class="flex space-x-2">
+              <button onclick="updateRevenueChart('2025')" id="btn-rev-2025" class="px-2.5 py-1 text-xs font-semibold rounded bg-brand-600 text-white">2025 全年</button>
+              <button onclick="updateRevenueChart('2026Q3')" id="btn-rev-2026" class="px-2.5 py-1 text-xs font-semibold rounded bg-slate-200 text-slate-700">2026 Q3</button>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="revenueMixChart"></canvas>
+          </div>
+          <p class="text-xs text-slate-500 mt-3 text-center">
+            * 基礎設施事業群（含資料中心整機櫃電力與液冷 CDU）比重由 2025 年 27.9% 激增至 2026Q3 的 35.0%。
+          </p>
+        </div>
+
+        <!-- Four Business Groups Detail Cards -->
+        <div class="lg:col-span-6 space-y-3">
+          <h4 class="font-bold text-slate-800 text-sm mb-2">四大核心事業群戰略定位</h4>
+          
+          <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 hover:border-brand-500 transition">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-slate-800 text-sm">⚡ 電源及零組件 (Power & Components)</span>
+              <span class="text-xs font-bold text-brand-700 bg-brand-100 px-2 py-0.5 rounded">占營收 ~51-53.6%</span>
+            </div>
+            <p class="text-xs text-slate-600 mt-1">AI 伺服器電源模組、Direct-to-Chip DC-DC 轉換器、乾坤科技一體成型電感、無刷風扇。</p>
+          </div>
+
+          <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 hover:border-brand-500 transition">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-slate-800 text-sm">🏢 基礎設施 (Infrastructure)</span>
+              <span class="text-xs font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded">占營收 ~27.9-35%</span>
+            </div>
+            <p class="text-xs text-slate-600 mt-1">資料中心整機櫃供電、液冷 CDU (2000kW+)、大型 UPS、工商業儲能案場與微電網。</p>
+          </div>
+
+          <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 hover:border-brand-500 transition">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-slate-800 text-sm">🤖 自動化 (Automation)</span>
+              <span class="text-xs font-bold text-slate-700 bg-slate-200 px-2 py-0.5 rounded">占營收 ~7.8-8%</span>
+            </div>
+            <p class="text-xs text-slate-600 mt-1">工業自動化 (IA) 變頻器/驅動器、可程式控制器、智慧樓宇 (BA) 控制系統。</p>
+          </div>
+
+          <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 hover:border-brand-500 transition">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-slate-800 text-sm">🚗 交通 (Mobility)</span>
+              <span class="text-xs font-bold text-slate-700 bg-slate-200 px-2 py-0.5 rounded">占營收 ~4.8-6%</span>
+            </div>
+            <p class="text-xs text-slate-600 mt-1">電動車 (EV) 電驅馬達、車載充電器 (OBC)、高壓直流快充樁，卡位國際 Tier-1 車廠。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Porter's 5 Forces Model Analysis -->
+      <div class="pt-4">
+        <h4 class="font-bold text-slate-800 text-md mb-3">競爭優勢分析：波特五力模型 (Porter's Five Forces)</h4>
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <div class="text-xs font-bold text-red-600 mb-1">極低 ➔ 競爭威脅</div>
+            <div class="font-bold text-slate-800 text-sm mb-1">同業競爭強度</div>
+            <p class="text-xs text-slate-600">全球 AI 伺服器電源市占逾 50%，高階板端 DC-DC 更達 70-75%，高壓高功耗進入壁壘極高。</p>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <div class="text-xs font-bold text-emerald-600 mb-1">極高 ➔ 議價護城河</div>
+            <div class="font-bold text-slate-800 text-sm mb-1">買方議價能力</div>
+            <p class="text-xs text-slate-600">與各大美系 CSP 巨頭及晶片大廠 (Nvidia/ASIC) 深度共同開發，客製化程度高且轉換成本極高。</p>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <div class="text-xs font-bold text-emerald-600 mb-1">高 ➔ 垂直整合</div>
+            <div class="font-bold text-slate-800 text-sm mb-1">賣方議價能力</div>
+            <p class="text-xs text-slate-600">旗下乾坤科技掌握核心磁性元件 (Molding Choke) 專利材料，自主控制關鍵材料供應與成本。</p>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <div class="text-xs font-bold text-emerald-600 mb-1">極低 ➔ 技術斷層</div>
+            <div class="font-bold text-slate-800 text-sm mb-1">替代品威脅</div>
+            <p class="text-xs text-slate-600">當晶片 TDP 突破千瓦極限，液冷與高壓 800V 直流供電為剛性物理需求，無法被傳統氣冷替代。</p>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <div class="text-xs font-bold text-emerald-600 mb-1">高 ➔ 門檻極高</div>
+            <div class="font-bold text-slate-800 text-sm mb-1">新進入者威脅</div>
+            <p class="text-xs text-slate-600">需要長期驗證、熱力學/電力電子跨領域專利，以及全球多據點（泰國、美、歐）地緣備援產能。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: Financial Performance -->
+    <div id="tab2" class="tab-content bg-white p-6 rounded-b-xl border-x border-b border-slate-200 shadow-sm space-y-6 hidden">
+      <div>
+        <h3 class="text-lg font-bold text-slate-900 mb-1">近三年財務軌跡與營運槓桿效益</h3>
+        <p class="text-slate-600 text-sm">
+          受惠於高階 AI 電源與液冷系統出貨量爆發，台達電營收與毛利率連創新高，展現顯著的營運槓桿（Operating Leverage）效益。
+        </p>
+      </div>
+
+      <!-- Financial Chart & Insights Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-7 bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <h4 class="font-bold text-slate-800 text-sm mb-2">合併營收與獲利能力趨勢 (2024 - 2026)</h4>
+          <div class="chart-container">
+            <canvas id="financialTrendChart"></canvas>
+          </div>
+        </div>
+
+        <!-- CapEx & Balance Sheet Summary -->
+        <div class="lg:col-span-5 space-y-4">
+          <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-xl">
+            <h4 class="font-bold text-indigo-900 text-sm mb-1">💡 資本支出 (CapEx) 與資產負債擴張</h4>
+            <p class="text-xs text-indigo-800 leading-relaxed">
+              2025 年資本支出達 461 億元，2026 年進一步上調近五成至約 <strong>700 億元</strong>（上半年已執行 275 億元）。
+              公司發行 300 億元國內公司債/永續債以鎖定長期低成本資金，負債比率維持在 50.3% 之健全水準，為未來能見度明確的訂單擴產。
+            </p>
+          </div>
+
+          <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl">
+            <h4 class="font-bold text-slate-800 text-sm mb-2">股利率與現金流分配 Policy</h4>
+            <ul class="text-xs text-slate-600 space-y-1.5 list-disc list-inside">
+              <li><strong>盈餘配發率：</strong>長年穩定維持於 50% 左右之成熟大型權值股區間。</li>
+              <li><strong>2025 配息：</strong>發放每股現金股利 11.60 元（總計發放 301.32 億元）。</li>
+              <li><strong>ROE 表現：</strong>受高獲利驅動，權益報酬率顯著提升突破 20% 以上。</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financial Data Table -->
+      <div class="overflow-x-auto">
+        <h4 class="font-bold text-slate-800 text-sm mb-2">財務明細對比表 (單位：新台幣 億元 / %)</h4>
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="bg-slate-100 border-b border-slate-300 text-slate-700">
+              <th class="p-2.5 font-semibold">財務指標 / 期間</th>
+              <th class="p-2.5 font-semibold">2024 全年</th>
+              <th class="p-2.5 font-semibold">2025 全年</th>
+              <th class="p-2.5 font-semibold">2026 Q1</th>
+              <th class="p-2.5 font-semibold">2026 Q2</th>
+              <th class="p-2.5 font-semibold">2026 Q3</th>
+              <th class="p-2.5 font-semibold bg-emerald-50 text-emerald-800">2026 前三季累計</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200">
+            <tr>
+              <td class="p-2.5 font-medium text-slate-800">合併營收</td>
+              <td class="p-2.5 text-slate-600">4,211.47</td>
+              <td class="p-2.5 text-slate-600">5,548.85 (+32%)</td>
+              <td class="p-2.5 text-slate-600">1,593.44</td>
+              <td class="p-2.5 text-slate-600">1,832.56</td>
+              <td class="p-2.5 text-slate-600">1,970.00</td>
+              <td class="p-2.5 font-bold text-emerald-700 bg-emerald-50/50">5,396.68 (+37.22%)</td>
+            </tr>
+            <tr>
+              <td class="p-2.5 font-medium text-slate-800">毛利率 (%)</td>
+              <td class="p-2.5 text-slate-600">32.43%</td>
+              <td class="p-2.5 text-slate-600">34.30%</td>
+              <td class="p-2.5 text-slate-600">37.00%</td>
+              <td class="p-2.5 text-slate-600">35.64%</td>
+              <td class="p-2.5 text-slate-600">待官方結算</td>
+              <td class="p-2.5 font-bold text-emerald-700 bg-emerald-50/50">維持 >35% 高檔</td>
+            </tr>
+            <tr>
+              <td class="p-2.5 font-medium text-slate-800">營業利益率 (%)</td>
+              <td class="p-2.5 text-slate-600">10.20%</td>
+              <td class="p-2.5 text-slate-600">15.10%</td>
+              <td class="p-2.5 text-slate-600">16.60%</td>
+              <td class="p-2.5 text-slate-600">16.70%</td>
+              <td class="p-2.5 text-slate-600">待官方結算</td>
+              <td class="p-2.5 font-bold text-emerald-700 bg-emerald-50/50">~16.5%</td>
+            </tr>
+            <tr>
+              <td class="p-2.5 font-medium text-slate-800">稅後淨利</td>
+              <td class="p-2.5 text-slate-600">352.28</td>
+              <td class="p-2.5 text-slate-600">601.08 (+70.6%)</td>
+              <td class="p-2.5 text-slate-600">205.65</td>
+              <td class="p-2.5 text-slate-600">251.35</td>
+              <td class="p-2.5 text-slate-600">待官方結算</td>
+              <td class="p-2.5 font-bold text-emerald-700 bg-emerald-50/50">上半季已達 457.0 億</td>
+            </tr>
+            <tr>
+              <td class="p-2.5 font-medium text-slate-800">每股盈餘 (EPS, 元)</td>
+              <td class="p-2.5 text-slate-600">13.56</td>
+              <td class="p-2.5 text-slate-600">23.14</td>
+              <td class="p-2.5 text-slate-600">7.91</td>
+              <td class="p-2.5 text-slate-600">9.68 (單季新高)</td>
+              <td class="p-2.5 text-slate-600">預估 ~11-12</td>
+              <td class="p-2.5 font-bold text-emerald-700 bg-emerald-50/50">上半年 EPS 17.59 元</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 3: Growth Drivers & Tech -->
+    <div id="tab3" class="tab-content bg-white p-6 rounded-b-xl border-x border-b border-slate-200 shadow-sm space-y-6 hidden">
+      <div>
+        <h3 class="text-lg font-bold text-slate-900 mb-1">核心成長領域與次世代技術壁壘</h3>
+        <p class="text-slate-600 text-sm">
+          聚焦「AI 高壓電源、全方位液冷散熱、微電網儲能、全球地緣產能」四大競爭維度。
+        </p>
+      </div>
+
+      <!-- Technical Architecture Comparison Interactive Table -->
+      <div class="overflow-x-auto">
+        <h4 class="font-bold text-slate-800 text-sm mb-2">次世代 AI 資料中心技術升級對比 (Technical Paradigm Shift)</h4>
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="bg-slate-800 text-white">
+              <th class="p-3 font-semibold">關鍵技術構面</th>
+              <th class="p-3 font-semibold">傳統機房 / 工業標準規範</th>
+              <th class="p-3 font-semibold text-emerald-400">台達電次世代解決方案</th>
+              <th class="p-3 font-semibold">核心效益與技術護城河</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200 bg-slate-50">
+            <tr>
+              <td class="p-3 font-bold text-slate-800">機櫃供電架構</td>
+              <td class="p-3 text-slate-600">AC 480V 多級轉換轉 12V 直流</td>
+              <td class="p-3 font-semibold text-brand-700">800V DC / ±400V DC 高壓直流機櫃</td>
+              <td class="p-3 text-slate-600">轉換效率提升至 <strong>98.5%</strong>，大幅減少銅排線路發熱與損耗。</td>
+            </tr>
+            <tr>
+              <td class="p-3 font-bold text-slate-800">晶片降壓轉換</td>
+              <td class="p-3 text-slate-600">分離式多相供電與外接電感</td>
+              <td class="p-3 font-semibold text-brand-700">Direct-to-Chip 超薄 DC-DC 模組</td>
+              <td class="p-3 text-slate-600">全球市占高達 <strong>70-75%</strong>，釋放主板面積以堆疊更多 HBM 高速記憶體。</td>
+            </tr>
+            <tr>
+              <td class="p-3 font-bold text-slate-800">資料中心熱管理</td>
+              <td class="p-3 text-slate-600">氣冷冰水主機 (PUE 1.3~1.5)</td>
+              <td class="p-3 font-semibold text-brand-700">2000kW - 3000kW 列間 CDU 液冷系統</td>
+              <td class="p-3 text-slate-600">將 PUE 壓降至 <strong>1.05 極致水準</strong>，CDU 佔液冷成本 40-50%，端到端免除漏液風險。</td>
+            </tr>
+            <tr>
+              <td class="p-3 font-bold text-slate-800">電網韌性與儲能</td>
+              <td class="p-3 text-slate-600">柴油發電機 + 基礎離線 UPS</td>
+              <td class="p-3 font-semibold text-brand-700">微電網 + 固態變壓器 (SST) + 80MW/305MWh 儲能</td>
+              <td class="p-3 text-slate-600">毫秒級不斷電響應，協助 CSP 業者突破公用電網審批排隊限制。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Global Manufacturing Distribution -->
+      <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
+        <h4 class="font-bold text-slate-800 text-sm mb-3">全球產能分佈與地緣避險 (Global Manufacturing Footprint)</h4>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="p-3 bg-white rounded border border-slate-200 text-center">
+            <div class="text-xs text-slate-500">中國地區 (China)</div>
+            <div class="text-2xl font-bold text-slate-800 my-1">45%</div>
+            <p class="text-xs text-slate-500">主力生產基盤與完整供應鏈集群</p>
+          </div>
+          <div class="p-3 bg-white rounded border border-slate-200 text-center">
+            <div class="text-xs text-slate-500">泰國子公司 (DET)</div>
+            <div class="text-2xl font-bold text-brand-600 my-1">30%</div>
+            <p class="text-xs text-slate-500">20 座工廠，泰股市值龍頭，美歐伺服器出口主力</p>
+          </div>
+          <div class="p-3 bg-white rounded border border-slate-200 text-center">
+            <div class="text-xs text-slate-500">美國廠區 (USA)</div>
+            <div class="text-2xl font-bold text-indigo-600 my-1">在地組裝</div>
+            <p class="text-xs text-slate-500">高階液冷 CDU 與客製化機櫃工程即時協作</p>
+          </div>
+          <div class="p-3 bg-white rounded border border-slate-200 text-center">
+            <div class="text-xs text-slate-500">台灣、印度及歐洲</div>
+            <div class="text-2xl font-bold text-slate-800 my-1">25%</div>
+            <p class="text-xs text-slate-500">高階研發中心、斯洛伐克車用廠與微電網基地</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: Chip Flow & Valuation -->
+    <div id="tab4" class="tab-content bg-white p-6 rounded-b-xl border-x border-b border-slate-200 shadow-sm space-y-6 hidden">
+      <div>
+        <h3 class="text-lg font-bold text-slate-900 mb-1">籌碼集中度與市場評價重估 (Re-rating)</h3>
+        <p class="text-slate-600 text-sm">
+          法人籌碼呈現極高度集中，市場評價已由傳統工業電源（20-25x PE）升級至 AI 資料中心基礎設施核心供應商（45-60x PE）。
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Chip Ownership Pie Chart -->
+        <div class="lg:col-span-5 bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <h4 class="font-bold text-slate-800 text-sm mb-2">股權結構與法人籌碼分佈 (2026/10)</h4>
+          <div class="chart-container">
+            <canvas id="chipOwnershipChart"></canvas>
+          </div>
+          <p class="text-xs text-slate-500 text-center mt-2">
+            千張以上大戶持股高達 <strong>73.95%</strong>，三大法人合計持股逾 67%，籌碼沉澱極為穩定。
+          </p>
+        </div>
+
+        <!-- Broker Target Price Horizontal Chart -->
+        <div class="lg:col-span-7 bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <h4 class="font-bold text-slate-800 text-sm mb-2">各大法人 / 券商目標價觀點 (Analyst Target Prices)</h4>
+          <div class="chart-container">
+            <canvas id="targetPriceChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Institutional Rationale Summary -->
+      <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+        <h4 class="font-bold text-slate-800 text-sm mb-2">機構法人核心多頭論據</h4>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <div class="p-3 bg-white rounded border border-slate-200">
+            <span class="font-bold text-brand-700">日系外資 (目標價 3,000+)</span>
+            <p class="text-slate-600 mt-1">點名台達電為超大規模 CSP 業者自研 AI ASIC 伺服器高壓直流電源與專屬液冷最大的受益者。</p>
+          </div>
+          <div class="p-3 bg-white rounded border border-slate-200">
+            <span class="font-bold text-indigo-700">美系/歐系外資 (目標價 2,500-2,750)</span>
+            <p class="text-slate-600 mt-1">800V DC 與液冷 CDU 技術壁壘持續擴大，評價經短線拉回後更具長線配置吸引力。</p>
+          </div>
+          <div class="p-3 bg-white rounded border border-slate-200">
+            <span class="font-bold text-slate-800">FactSet 共識 (中位數 2,308)</span>
+            <p class="text-slate-600 mt-1">23 位分析師共識預估 2026 年 EPS 為 38.42 元，營收規模上看 7,518 億 ~ 8,263 億元。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: Risk & Investment Verdict -->
+    <div id="tab5" class="tab-content bg-white p-6 rounded-b-xl border-x border-b border-slate-200 shadow-sm space-y-6 hidden">
+      <div>
+        <h3 class="text-lg font-bold text-slate-900 mb-1">風險警訊評估與情境目標價推算</h3>
+        <p class="text-slate-600 text-sm">
+          結合批判性思維，提供熊市 (Bear)、基準 (Base) 與牛市 (Bull) 三種情境分析與會計/宏觀紅旗檢測。
+        </p>
+      </div>
+
+      <!-- Dynamic Scenario Valuation Calculator -->
+      <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
+        <h4 class="font-bold text-slate-800 text-sm mb-3">🧮 估值情境動態模擬器 (Valuation Scenario Tool)</h4>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <button onclick="setScenario('bear')" id="btn-scen-bear" class="p-3 rounded-lg border text-left bg-white border-slate-200 hover:border-red-400">
+            <div class="text-xs font-bold text-red-600">熊市情境 (Bear Case)</div>
+            <div class="text-lg font-bold text-slate-800">NT$ 1,536</div>
+            <div class="text-xs text-slate-500">2026E EPS $32.0 × 48x PE</div>
+          </button>
+          <button onclick="setScenario('base')" id="btn-scen-base" class="p-3 rounded-lg border-2 text-left bg-emerald-50 border-brand-500">
+            <div class="text-xs font-bold text-brand-700">基準情境 (Base Case)</div>
+            <div class="text-lg font-bold text-slate-800">NT$ 2,305</div>
+            <div class="text-xs text-slate-500">2026E EPS $38.42 × 60x PE</div>
+          </button>
+          <button onclick="setScenario('bull')" id="btn-scen-bull" class="p-3 rounded-lg border text-left bg-white border-slate-200 hover:border-indigo-400">
+            <div class="text-xs font-bold text-indigo-600">牛市情境 (Bull Case)</div>
+            <div class="text-lg font-bold text-slate-800">NT$ 2,933</div>
+            <div class="text-xs text-slate-500">2026E EPS $45.13 × 65x PE</div>
+          </button>
+        </div>
+
+        <div id="scenario-detail" class="p-4 bg-white rounded-lg border border-slate-200 text-xs text-slate-700 leading-relaxed">
+          <strong>基準情境說明：</strong>反映 2026 年預估 EPS 達 38.42 元，AI 伺服器電源與液冷營收佔比達 35-40%，維持高檔 55-60 倍前瞻本益比，目標價位落於 2,300 ~ 2,500 元區間。
+        </div>
+      </div>
+
+      <!-- Risk Red Flags Matrix -->
+      <div>
+        <h4 class="font-bold text-slate-800 text-sm mb-2">三大核心風險與紅旗警訊 (Risk Assessment)</h4>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="p-4 bg-red-50 border border-red-200 rounded-xl">
+            <div class="font-bold text-red-800 text-xs mb-1">1. 高本益比壓縮與 CSP 資本支出放緩</div>
+            <p class="text-xs text-red-700">當前 45-60 倍 PE 已充分預期 2026 高成長。若終端算力變現延遲導致 CSP 削減基建預算，高估值將面臨乘數修復壓力。</p>
+          </div>
+          <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+            <div class="font-bold text-amber-800 text-xs mb-1">2. 高階硬體品質控管與良率風險</div>
+            <p class="text-xs text-amber-700">高壓大電流與複雜液冷管路對耐用度要求極苛刻，特定零組件（如閥門/被動元件）若發生品質瑕疵，可能影響後續認證。</p>
+          </div>
+          <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+            <div class="font-bold text-slate-800 text-xs mb-1">3. 非 AI 業務（電動車/工業自動化）復甦遲滯</div>
+            <p class="text-xs text-slate-600">傳統工業自動化 (IA) 受製造業資本支出保守壓抑，電動車 (EV) 亦受歐美需求放緩影響，短期稍微拖累整體毛利。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Final Investment Verdict Box -->
+      <div class="bg-slate-900 text-white p-6 rounded-xl shadow-lg border border-slate-800">
+        <div class="flex flex-wrap justify-between items-center border-b border-slate-800 pb-4 mb-4">
+          <div>
+            <span class="text-xs font-bold text-brand-400 uppercase tracking-widest">FINAL VERDICT</span>
+            <h3 class="text-2xl font-extrabold text-white">投資評級：買入 (BUY)</h3>
+          </div>
+          <div class="text-right">
+            <div class="text-xs text-slate-400">12 個月目標價預期</div>
+            <div class="text-2xl font-black text-brand-400">NT$ 2,500 - 2,800</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+          <div>
+            <h5 class="font-bold text-slate-300 mb-2">💡 3 個核心看多理由 (Investment Thesis)</h5>
+            <ol class="list-decimal list-inside space-y-1.5 text-slate-300">
+              <li><strong>絕對壟斷地位：</strong>AI 伺服器板端 Direct-to-Chip DC-DC 轉換器市占率達 70-75%。</li>
+              <li><strong>液冷 CDU 系統整合：</strong>具備 2000-3000kW 列間 CDU 端到端完整供貨能力，PUE 降至 1.05。</li>
+              <li><strong>質變驅動獲利重塑：</strong>從硬體零組件轉型為 Grid-to-Chip 系統架構商，營收規模衝破 7,500 億。</li>
+            </ol>
+          </div>
+          <div>
+            <h5 class="font-bold text-slate-300 mb-2">⚠️ 關鍵監測點 (Key Triggers to Watch)</h5>
+            <ul class="list-disc list-inside space-y-1.5 text-slate-300">
+              <li>美系四大 CSP (Microsoft, AWS, Google, Meta) 資本支出最新公告。</li>
+              <li>泰國 DET 廠區與美國在地組裝產能擴充之良率與交付進度。</li>
+              <li>單季毛利率是否穩定維持在 35% 以上的高檔常態。</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footnote Disclaimer -->
+  <footer class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-xs text-slate-400">
+    <p>免責聲明：本報告僅供學術研究與參考，不構成任何投資買賣建議。市場投資具有風險，投資人應獨立評估並自負盈虧。</p>
+    <p class="mt-1">數據來源：台達電法說會資料、公開資訊觀測站、FactSet、各大外資券商研究報告 (2024-2026)。</p>
+  </footer>
+
+  <!-- JavaScript App Logic & Charts -->
+  <script>
+    // Tab Switching Functionality
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('border-brand-600', 'text-brand-600');
+        btn.classList.add('border-transparent', 'text-slate-500');
+      });
+
+      document.getElementById(tabId).classList.remove('hidden');
+      const activeBtn = document.getElementById('btn-' + tabId);
+      activeBtn.classList.remove('border-transparent', 'text-slate-500');
+      activeBtn.classList.add('border-brand-600', 'text-brand-600');
+    }
+
+    // Chart.js - Global Defaults
+    Chart.defaults.font.family = 'ui-sans-serif, system-ui, sans-serif';
+    Chart.defaults.color = '#64748b';
+
+    // 1. Revenue Mix Donut Chart
+    const revenueData = {
+      '2025': [53.6, 27.9, 7.8, 4.8],
+      '2026Q3': [51.0, 35.0, 8.0, 6.0]
+    };
+
+    const ctxRevenue = document.getElementById('revenueMixChart').getContext('2d');
+    let revenueChart = new Chart(ctxRevenue, {
+      type: 'doughnut',
+      data: {
+        labels: ['電源及零組件', '基礎設施 (含液冷/機櫃)', '自動化 (IA/BA)', '交通 (EV)'],
+        datasets: [{
+          data: revenueData['2025'],
+          backgroundColor: ['#059669', '#4f46e5', '#94a3b8', '#cbd5e1'],
+          borderWidth: 2,
+          borderColor: '#ffffff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+          tooltip: {
+            callbacks: {
+              label: function(ctx) {
+                let label = ctx.label.split(' ')[0] || '';
+                return ' ' + label + ': ' + ctx.raw + '%';
+              }
+            }
+          }
+        }
+      }
+    });
+
+    function updateRevenueChart(year) {
+      revenueChart.data.datasets[0].data = revenueData[year];
+      revenueChart.update();
+      if(year === '2025') {
+        document.getElementById('btn-rev-2025').className = 'px-2.5 py-1 text-xs font-semibold rounded bg-brand-600 text-white';
+        document.getElementById('btn-rev-2026').className = 'px-2.5 py-1 text-xs font-semibold rounded bg-slate-200 text-slate-700';
+      } else {
+        document.getElementById('btn-rev-2026').className = 'px-2.5 py-1 text-xs font-semibold rounded bg-brand-600 text-white';
+        document.getElementById('btn-rev-2025').className = 'px-2.5 py-1 text-xs font-semibold rounded bg-slate-200 text-slate-700';
+      }
+    }
+
+    // 2. Financial Performance Combo Chart
+    const ctxFinancial = document.getElementById('financialTrendChart').getContext('2d');
+    new Chart(ctxFinancial, {
+      type: 'bar',
+      data: {
+        labels: ['2024 全年', '2025 全年', '2026 Q1', '2026 Q2', '2026 Q3(E)'],
+        datasets: [
+          {
+            type: 'line',
+            label: '毛利率 (%)',
+            data: [32.43, 34.30, 37.00, 35.64, 36.50],
+            borderColor: '#059669',
+            backgroundColor: '#059669',
+            yAxisID: 'y1',
+            borderWidth: 3,
+            pointRadius: 4
+          },
+          {
+            type: 'line',
+            label: '營業利益率 (%)',
+            data: [10.20, 15.10, 16.60, 16.70, 16.80],
+            borderColor: '#4f46e5',
+            backgroundColor: '#4f46e5',
+            yAxisID: 'y1',
+            borderWidth: 2,
+            borderDash: [4, 4],
+            pointRadius: 3
+          },
+          {
+            type: 'bar',
+            label: '合併營收 (億元)',
+            data: [4211.47, 5548.85, 1593.44, 1832.56, 1970.00],
+            backgroundColor: '#e2e8f0',
+            hoverBackgroundColor: '#cbd5e1',
+            borderRadius: 4,
+            yAxisID: 'y'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            type: 'linear',
+            position: 'left',
+            title: { display: true, text: '營收 (億元)', font: { size: 10 } },
+            grid: { color: '#f1f5f9' }
+          },
+          y1: {
+            type: 'linear',
+            position: 'right',
+            title: { display: true, text: '利潤率 (%)', font: { size: 10 } },
+            min: 0,
+            max: 45,
+            grid: { drawOnChartArea: false }
+          }
+        },
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+        }
+      }
+    });
+
+    // 3. Chip Flow Ownership Pie Chart
+    const ctxChip = document.getElementById('chipOwnershipChart').getContext('2d');
+    new Chart(ctxChip, {
+      type: 'pie',
+      data: {
+        labels: ['外資持股 (61.61%)', '董監事與大戶 (12.34%)', '投信與自營商 (5.87%)', '散戶與其他 (20.18%)'],
+        datasets: [{
+          data: [61.61, 12.34, 5.87, 20.18],
+          backgroundColor: ['#047857', '#059669', '#3b82f6', '#cbd5e1'],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } }
+        }
+      }
+    });
+
+    // 4. Target Price Breakdown Horizontal Bar Chart
+    const ctxTarget = document.getElementById('targetPriceChart').getContext('2d');
+    new Chart(ctxTarget, {
+      type: 'bar',
+      data: {
+        labels: ['日系外資', '歐系外資', '群益證券', '美系外資', '本土大型投顧', 'FactSet 中位數'],
+        datasets: [{
+          label: '目標價 (NT$)',
+          data: [3000, 2750, 2680, 2500, 2400, 2308],
+          backgroundColor: ['#047857', '#059669', '#10b981', '#3b82f6', '#6366f1', '#94a3b8'],
+          borderRadius: 4
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { min: 1500, max: 3200, grid: { color: '#f1f5f9' } }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+
+    // Interactive Scenario Calculator Logic
+    const scenarioDetails = {
+      'bear': {
+        title: '熊市情境 (Bear Case)',
+        price: 'NT$ 1,536',
+        desc: '<strong>熊市假設：</strong>終端算力貨幣化延遲，CSP 削減 2026 資本支出，非 AI 業務復甦滯後。預估 2026E EPS 下修至 $32.0 元，前瞻 PE 回檔至歷史下限 48x。'
+      },
+      'base': {
+        title: '基準情境 (Base Case)',
+        price: 'NT$ 2,305',
+        desc: '<strong>基準情境說明：</strong>反映 2026 年預估 EPS 達 38.42 元，AI 伺服器電源與液冷營收佔比達 35-40%，維持高檔 60x 前瞻本益比，目標價位落於 2,300 ~ 2,500 元區間。'
+      },
+      'bull': {
+        title: '牛市情境 (Bull Case)',
+        price: 'NT$ 2,933',
+        desc: '<strong>牛市假設：</strong>客製化 ASIC 伺服器與 800V 高壓機櫃加速滲透，液冷 CDU 全面供不應求。2026E EPS 挑戰 $45.13 元上限，享 65x 超高溢價評價。'
+      }
+    };
+
+    function setScenario(scen) {
+      document.getElementById('btn-scen-bear').className = 'p-3 rounded-lg border text-left bg-white border-slate-200 hover:border-red-400';
+      document.getElementById('btn-scen-base').className = 'p-3 rounded-lg border text-left bg-white border-slate-200 hover:border-brand-400';
+      document.getElementById('btn-scen-bull').className = 'p-3 rounded-lg border text-left bg-white border-slate-200 hover:border-indigo-400';
+
+      if(scen === 'bear') document.getElementById('btn-scen-bear').className = 'p-3 rounded-lg border-2 text-left bg-red-50 border-red-500';
+      if(scen === 'base') document.getElementById('btn-scen-base').className = 'p-3 rounded-lg border-2 text-left bg-emerald-50 border-brand-500';
+      if(scen === 'bull') document.getElementById('btn-scen-bull').className = 'p-3 rounded-lg border-2 text-left bg-indigo-50 border-indigo-500';
+
+      document.getElementById('scenario-detail').innerHTML = scenarioDetails[scen].desc;
+    }
+  </script>
+</body>
+</html>
