@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金像電 (2368) 深度投資研究與評價報告</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font Awesome (Unicode Icons alternative) -->
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 650px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 360px;
+            }
+        }
+        /* Custom scrollbar for table containers */
+        .overflow-x-auto::-webkit-scrollbar {
+            height: 6px;
+        }
+        .overflow-x-auto::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Chosen Palette: Warm Slate & Professional Emerald / Indigo Accents -->
+    <!-- Application Structure Plan: 本應用程式採用「高階法人的研究報表」資訊架構，設計為 7 大主題頁籤 (Tab Layout)。首頁頂端提供動態關鍵指標 (KPI Header) 與投資評級摘要，方便投資人快速掌握核心邏輯。內頁分區包含：1. 業務概覽與波特五力、2. 財務深度與營收動能、3. 估值分析與動態情境試算、4. 籌碼結構與法人動向、5. 亞馬遜結盟與全球擴產、6. 熊市風險與紅旗警訊、7. 投資決議與總結。新增「目標價動態試算器」，讓使用者能依不同 EPS 與 PE 倍數即時計算潛在報酬率，提昇互動價值與批判性決策效率。 -->
+    <!-- Visualization & Content Choices: 
+        1. 營收與年增率趨勢 -> Goal: 展示成長脈絡 -> Chart.js 雙軸柱狀/折線圖 -> 互動 Tooltip -> 凸顯單月營收破百億里程碑 -> Chart.js Canvas
+        2. 獲利三率與 EPS 走勢 -> Goal: 證明獲利質變 -> Chart.js 折線圖 + 數據卡片 -> 清楚呈現毛利率自 25% 躍升至 34%+ 軌跡 -> Chart.js Canvas
+        3. 產品營收結構轉型 -> Goal: 凸顯 AI 伺服器比重達 80% -> Chart.js 環狀圖 (Donut Chart) -> 呈現 2019 至 2025/2026 的結構躍遷 -> Chart.js Canvas
+        4. 籌碼與大戶集中度 -> Goal: 呈現 76.65% 高度沉澱 -> Chart.js 圓餅圖 + 法人進出表格 -> 清楚說明投信承接與外資避險調節 -> Chart.js Canvas
+        5. 目標價感應試算器 -> Goal: 賦予使用者自訂情境 -> HTML/JS Dynamic Slider -> 即時運算目標價與潛在漲幅 -> Vanilla JS
+        6. 圖示與元件 -> 全面使用 Unicode 與 HTML/Tailwind 質感 CSS 元件 -> 嚴格恪守 NO SVG / NO Mermaid JS 規範。
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <!-- Top Header / KPI Navigation Bar -->
+    <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div class="flex items-center space-x-3">
+                    <span class="bg-emerald-500 text-slate-950 font-black text-xs px-2.5 py-1 rounded-md tracking-wider">BUY 買進</span>
+                    <div>
+                        <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                            金像電 <span class="text-slate-400 text-base font-normal">(2368.TW)</span>
+                        </h1>
+                        <p class="text-xs text-slate-400">AI 伺服器與高速網通雙引擎驅動之價值重估與全球擴產布局</p>
+                    </div>
+                </div>
+                <!-- Dynamic Key Metrics Pills -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    <div class="bg-slate-800/80 p-2 rounded border border-slate-700 text-center">
+                        <span class="text-slate-400 block">當前參考價</span>
+                        <span class="text-sm font-bold text-slate-100">NT$ 1,195</span>
+                    </div>
+                    <div class="bg-slate-800/80 p-2 rounded border border-slate-700 text-center">
+                        <span class="text-slate-400 block">共識目標價</span>
+                        <span class="text-sm font-bold text-emerald-400">NT$ 1,700</span>
+                    </div>
+                    <div class="bg-slate-800/80 p-2 rounded border border-slate-700 text-center">
+                        <span class="text-slate-400 block">預估潛在漲幅</span>
+                        <span class="text-sm font-bold text-emerald-400">+42.26%</span>
+                    </div>
+                    <div class="bg-slate-800/80 p-2 rounded border border-slate-700 text-center">
+                        <span class="text-slate-400 block">2026E EPS</span>
+                        <span class="text-sm font-bold text-amber-300">31.0 ~ 38.0元</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Navigation Tabs -->
+    <nav class="bg-white border-b border-slate-200 shadow-sm sticky top-[61px] z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex space-x-1 sm:space-x-4 overflow-x-auto py-2 text-xs sm:text-sm font-medium scrollbar-none" id="tab-buttons">
+                <button onclick="switchTab('tab-overview')" id="btn-tab-overview" class="tab-btn px-3 py-2 rounded-lg bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200 whitespace-nowrap">
+                    🏢 業務與護城河
+                </button>
+                <button onclick="switchTab('tab-financials')" id="btn-tab-financials" class="tab-btn px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 whitespace-nowrap">
+                    📈 財務與獲利動能
+                </button>
+                <button onclick="switchTab('tab-valuation')" id="btn-tab-valuation" class="tab-btn px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 whitespace-nowrap">
+                    🧮 估值與情境試算
+                </button>
+                <button onclick="switchTab('tab-chips')" id="btn-tab-chips" class="tab-btn px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 whitespace-nowrap">
+                    🏛️ 籌碼與大戶動向
+                </button>
+                <button onclick="switchTab('tab-catalysts')" id="btn-tab-catalysts" class="tab-btn px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 whitespace-nowrap">
+                    🚀 亞馬遜結盟與擴產
+                </button>
+                <button onclick="switchTab('tab-risks')" id="btn-tab-risks" class="tab-btn px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 whitespace-nowrap">
+                    ⚠️ 熊市警訊與風險
+                </button>
+                <button onclick="switchTab('tab-verdict')" id="btn-tab-verdict" class="tab-btn px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 whitespace-nowrap">
+                    🎯 投資總結與評級
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- ==================== TAB 1: 業務概覽與護城河 ==================== -->
+        <section id="tab-overview" class="tab-content space-y-6">
+            <!-- Introductory Section Paragraph -->
+            <div class="bg-indigo-900/5 border-l-4 border-indigo-600 p-4 rounded-r-lg">
+                <h2 class="text-base font-bold text-indigo-950">重點章節導覽：公司營運模式與核心護城河解析</h2>
+                <p class="text-sm text-slate-600 mt-1">
+                    本區塊旨在梳理金像電（2368）的核心營運本質、產品結構之歷史轉型軌跡，並運用「波特五力模型」評估其在 AI 算力產業鏈中的競合壁壘。透過明確的業務拆解，投資人能清晰理解公司如何從傳統景氣循環零組件廠，躍升為全球 CSP 自研晶片與 AI 伺服器不可或缺的尖端 PCB 供應商。
+                </p>
+            </div>
+
+            <!-- One-Sentence Business Summary -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <span class="text-xs font-semibold uppercase tracking-wide text-indigo-600">核心賺錢邏輯 (Core Business Model)</span>
+                    <h3 class="text-lg font-bold text-slate-900">
+                        「金像電靠量產 30~56 層超高層板與高階 HDI 混壓技術，為全球雲端巨擘（CSP）與 GPU 龍頭提供 AI 伺服器及高速網通主板獲利。」
+                    </h3>
+                </div>
+                <div class="bg-indigo-50 border border-indigo-100 rounded-lg p-3 shrink-0 text-center">
+                    <span class="text-xs text-indigo-600 font-medium block">全球伺服器 PCB 市占率</span>
+                    <span class="text-2xl font-black text-indigo-900">龍頭領先群</span>
+                </div>
+            </div>
+
+            <!-- Revenue Segment Shift & Chart -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Left: Interactive Revenue Breakdown Chart -->
+                <div class="lg:col-span-6 bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 mb-1">產品營收比重結構演進 (2019 vs 2025Q3)</h3>
+                        <p class="text-xs text-slate-500 mb-4">伺服器應用佔比自 49% 翻倍躍升至 80%，AI 伺服器板已越過 30% 大關</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chartRevenueSegment"></canvas>
+                    </div>
+                </div>
+
+                <!-- Right: Detailed Revenue Segment Table -->
+                <div class="lg:col-span-6 bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 mb-3">營收類別細節與技術規格演進</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs text-left text-slate-600">
+                                <thead class="bg-slate-100 text-slate-700 uppercase font-semibold">
+                                    <tr>
+                                        <th class="p-2.5">產品應用</th>
+                                        <th class="p-2.5">2019 比重</th>
+                                        <th class="p-2.5">2025Q3 比重</th>
+                                        <th class="p-2.5">技術規格與層數重點</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="p-2.5 font-bold text-indigo-900">伺服器 (通用與 AI)</td>
+                                        <td class="p-2.5">49%</td>
+                                        <td class="p-2.5 font-bold text-emerald-600">80%</td>
+                                        <td class="p-2.5">50~56層主板、30層+ UBB/OAM、M8/M9 超低損耗材料、3~4階 HDI 混壓</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="p-2.5 font-bold text-slate-800">網通設備 (交換器)</td>
+                                        <td class="p-2.5">35%</td>
+                                        <td class="p-2.5">10%~13%</td>
+                                        <td class="p-2.5">400G (30層) / 800G (38~44層) 高速主板、高阻抗背板</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="p-2.5">筆記型電腦 (商用/AI)</td>
+                                        <td class="p-2.5">13%</td>
+                                        <td class="p-2.5">7%~9%</td>
+                                        <td class="p-2.5">高階電競與商用機種 HDI 應用板（主動降比重）</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="p-2.5">其他 (工控與基地台)</td>
+                                        <td class="p-2.5">3%</td>
+                                        <td class="p-2.5">3%~4%</td>
+                                        <td class="p-2.5">工控模組與通訊周邊板</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-3 bg-slate-50 rounded-lg text-xs text-slate-500">
+                        💡 <strong>結構轉型關鍵：</strong> 金像電淘汰低毛利消費性產線，將核心產能全部轉向 AI 伺服器（UBB/OAM）與 800G 交換器，實現平均單價 (ASP) 與毛利率的雙重躍升。
+                    </div>
+                </div>
+            </div>
+
+            <!-- Porter's 5 Forces Moat Analysis Grid -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                <h3 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-2">波特五力競爭優勢模型分析 (Porter's 5 Forces)</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Force 1 -->
+                    <div class="p-4 rounded-lg bg-slate-50 border border-slate-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-sm text-slate-900">1. 供應商議價能力</span>
+                            <span class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">中度偏低 (可控)</span>
+                        </div>
+                        <p class="text-xs text-slate-600">
+                            雖然 M8/M9 級銅箔基板與 LDK2 玻纖布供需緊俏，但亞馬遜（Amazon）策略入股後，CSP 巨擘直接攜手金像電向上游材料廠爭取專案配額，大舉提升對材料供應商的談判分量。
+                        </p>
+                    </div>
+                    <!-- Force 2 -->
+                    <div class="p-4 rounded-lg bg-slate-50 border border-slate-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-sm text-slate-900">2. 買方議價能力</span>
+                            <span class="text-xs bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded">低 (具高定價權)</span>
+                        </div>
+                        <p class="text-xs text-slate-600">
+                            50 層以上超高層板與 3~4 階 HDI 混壓厚板全球僅極少數廠商具備高良率量產能力。超大規模 CSP（AWS, Google, Meta, MSFT）急需確保產能，讓金像電擁有極強的產品溢價力。
+                        </p>
+                    </div>
+                    <!-- Force 3 -->
+                    <div class="p-4 rounded-lg bg-slate-50 border border-slate-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-sm text-slate-900">3. 潛在進入者威脅</span>
+                            <span class="text-xs bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded">極低 (技術壁壘極高)</span>
+                        </div>
+                        <p class="text-xs text-slate-600">
+                            超高層壓合精密阻抗控制、高散熱設計以及專用產能資本投入動輒百億元，新進業者需要數年時間進行學習曲線與認證，短期內無法跨越門檻。
+                        </p>
+                    </div>
+                    <!-- Force 4 -->
+                    <div class="p-4 rounded-lg bg-slate-50 border border-slate-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-sm text-slate-900">4. 替代品威脅</span>
+                            <span class="text-xs bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded">極低 (無替代方案)</span>
+                        </div>
+                        <p class="text-xs text-slate-600">
+                            儘管 CPO (矽光子) 等前瞻技術興起，但高階多層 PCB 仍為高速電路板與晶片承載不可替代的實體基礎架構，短期內無任何技術可完全取代。
+                        </p>
+                    </div>
+                    <!-- Force 5 -->
+                    <div class="p-4 rounded-lg bg-slate-50 border border-slate-200 sm:col-span-2 lg:col-span-2">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-sm text-slate-900">5. 現有競爭者對峙強度</span>
+                            <span class="text-xs bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded">中度 (聚焦於高階壟斷)</span>
+                        </div>
+                        <p class="text-xs text-slate-600">
+                            主要對手包括健鼎、滬士電等。然而金像電在 AWS Trainium 系列與 NVIDIA OAM/UBB 極高層板製程良率上保持顯著領先，競爭格局由產品價格轉轉為專用產能與量產良率的較量。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 2: 財務深度與營收動能 ==================== -->
+        <section id="tab-financials" class="tab-content hidden space-y-6">
+            <!-- Introductory Section Paragraph -->
+            <div class="bg-indigo-900/5 border-l-4 border-indigo-600 p-4 rounded-r-lg">
+                <h2 class="text-base font-bold text-indigo-950">重點章節導覽：財務表現透視與獲利三率躍升趨勢</h2>
+                <p class="text-sm text-slate-600 mt-1">
+                    本板塊彙整金像電近 3~4 年的綜合財務數據、月度營收軌跡以及獲利三率（毛利率、營業利益率、稅後淨利率）的質變。透過動態圖表與詳細數據表，佐證公司在 2026 年呈現爆發性成長，單月營收越過百億元大關，且利潤率持續刷寫歷史新高。
+                </p>
+            </div>
+
+            <!-- Financial Summary KPI Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <span class="text-xs font-semibold text-slate-400 block">2026 年前 9 月累計營收</span>
+                    <span class="text-2xl font-black text-slate-900 mt-1 block">733.79 億</span>
+                    <span class="text-xs text-emerald-600 font-bold">▲ +69.07% YoY (超越 2025 全年)</span>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <span class="text-xs font-semibold text-slate-400 block">2026 Q2 單季毛利率</span>
+                    <span class="text-2xl font-black text-indigo-900 mt-1 block">34.65%</span>
+                    <span class="text-xs text-indigo-600 font-bold">高於 2024 全年之 29.26%</span>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <span class="text-xs font-semibold text-slate-400 block">2026 上半年累計 EPS</span>
+                    <span class="text-2xl font-black text-emerald-600 mt-1 block">16.15 元</span>
+                    <span class="text-xs text-slate-500 font-medium">達 2025 全年 EPS 的 83%</span>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <span class="text-xs font-semibold text-slate-400 block">歷史最高單月營收 (2026/08)</span>
+                    <span class="text-2xl font-black text-amber-600 mt-1 block">103.84 億</span>
+                    <span class="text-xs text-amber-600 font-bold">▲ +76.39% YoY (改寫單月紀錄)</span>
+                </div>
+            </div>
+
+            <!-- Charts Grid: Revenue Trend & Margins Trend -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Monthly Revenue Chart -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="text-base font-bold text-slate-900 mb-1">2026 年 4 月~ 9 月單月營收走勢 (億元新台幣)</h3>
+                    <p class="text-xs text-slate-500 mb-4">7~8 月連兩月跨越百億元大關，展現出高階產能開出與強勁需求</p>
+                    <div class="chart-container">
+                        <canvas id="chartMonthlyRevenue"></canvas>
+                    </div>
+                </div>
+
+                <!-- Margins & EPS Trend Chart -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="text-base font-bold text-slate-900 mb-1">2023 ~ 2026 Q2 獲利三率與 EPS 趨勢</h3>
+                    <p class="text-xs text-slate-500 mb-4">高層數板與高階 HDI 混壓帶動毛利率站穩 34%+ 高檔</p>
+                    <div class="chart-container">
+                        <canvas id="chartMarginsTrend"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Financial Statements Table (Last 3 Years + 2026) -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <h3 class="text-base font-bold text-slate-900 mb-3">近四年財務表現與獲利能力指標透視 (Financial Performance)</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left text-slate-600">
+                        <thead class="bg-slate-100 text-slate-700 uppercase font-semibold">
+                            <tr>
+                                <th class="p-3">財務年度 / 季度</th>
+                                <th class="p-3">合併營收 (億元)</th>
+                                <th class="p-3">營業毛利率 (%)</th>
+                                <th class="p-3">營業利益率 (%)</th>
+                                <th class="p-3">稅後淨利率 (%)</th>
+                                <th class="p-3">單季 EPS (元)</th>
+                                <th class="p-3">累計 / 全年 EPS</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3 font-semibold text-slate-900">2023 全年</td>
+                                <td class="p-3">313.43</td>
+                                <td class="p-3">25.71%</td>
+                                <td class="p-3">17.10%</td>
+                                <td class="p-3">11.74%</td>
+                                <td class="p-3">—</td>
+                                <td class="p-3 font-bold text-slate-700">7.17 元</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3 font-semibold text-slate-900">2024 全年</td>
+                                <td class="p-3">386.20</td>
+                                <td class="p-3">29.26%</td>
+                                <td class="p-3">20.71%</td>
+                                <td class="p-3">14.42%</td>
+                                <td class="p-3">—</td>
+                                <td class="p-3 font-bold text-slate-700">11.42 元</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3 font-semibold text-slate-900">2025 全年</td>
+                                <td class="p-3">597.00</td>
+                                <td class="p-3">32.80%</td>
+                                <td class="p-3">23.40%</td>
+                                <td class="p-3">16.01%</td>
+                                <td class="p-3">5.86 (Q4)</td>
+                                <td class="p-3 font-bold text-indigo-700">19.47 元 (改寫歷史新高)</td>
+                            </tr>
+                            <tr class="hover:bg-indigo-50/50 bg-indigo-50/20">
+                                <td class="p-3 font-bold text-indigo-950">2026 Q1</td>
+                                <td class="p-3 font-medium">170.82</td>
+                                <td class="p-3 font-bold text-emerald-600">34.81%</td>
+                                <td class="p-3 font-bold text-emerald-600">26.85%</td>
+                                <td class="p-3 font-medium">18.04%</td>
+                                <td class="p-3 font-bold text-indigo-900">6.87 元</td>
+                                <td class="p-3 font-medium">6.87 元</td>
+                            </tr>
+                            <tr class="hover:bg-indigo-50/50 bg-indigo-50/20">
+                                <td class="p-3 font-bold text-indigo-950">2026 Q2</td>
+                                <td class="p-3 font-medium">243.18</td>
+                                <td class="p-3 font-bold text-emerald-600">34.65%</td>
+                                <td class="p-3 font-bold text-emerald-600">26.43%</td>
+                                <td class="p-3 font-medium">19.70%</td>
+                                <td class="p-3 font-bold text-indigo-900">9.28 元</td>
+                                <td class="p-3 font-bold text-emerald-600">16.15 元 (上半年累計)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 3: 估值與動態情境試算 ==================== -->
+        <section id="tab-valuation" class="tab-content hidden space-y-6">
+            <!-- Introductory Section Paragraph -->
+            <div class="bg-indigo-900/5 border-l-4 border-indigo-600 p-4 rounded-r-lg">
+                <h2 class="text-base font-bold text-indigo-950">重點章節導覽：市場估值評價與動態情境試算工具</h2>
+                <p class="text-sm text-slate-600 mt-1">
+                    本板塊分析金像電（2368）從傳統 PCB 板廠（歷史 PE 10~15x）轉型為 AI 算力核心股（滾動 PE 39~45x）的評價重估（Re-rating）過程。特別提供互動式的「目標價動態試算工具」，允許分析師與投資人自訂預估 EPS 與前瞻本益比，評估不同牛熊情境下的潛在投資報酬率。
+                </p>
+            </div>
+
+            <!-- Valuation Comparison Table -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                <h3 class="text-base font-bold text-slate-900">估值與評價指標對標分析</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left text-slate-600">
+                        <thead class="bg-slate-100 text-slate-700 uppercase font-semibold">
+                            <tr>
+                                <th class="p-3">評價指標</th>
+                                <th class="p-3">數值 / 水位</th>
+                                <th class="p-3">產業對標與解讀</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3 font-bold text-slate-900">近一年交易價格區間</td>
+                                <td class="p-3 font-medium">1,105 ~ 1,285 元</td>
+                                <td class="p-3 text-slate-500">歷史波動區間介於 388.5 ~ 1,580 元，穩居千元級指標股</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3 font-bold text-slate-900">滾動本益比 (P/E Ratio)</td>
+                                <td class="p-3 font-bold text-indigo-600">39.66 ~ 45.02 倍</td>
+                                <td class="p-3 text-slate-500">同業國際 AI 算力供應鏈平均約 47~53 倍，處於合理高檔區間</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3 font-bold text-slate-900">每股淨值與本淨比 (P/B)</td>
+                                <td class="p-3 font-medium">淨值 38.34 ~ 81.49元 / P/B 14.9 ~ 32.2x</td>
+                                <td class="p-3 text-slate-500">反映高單季 ROE 與獲利爆發帶動之資產評價溢價</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3 font-bold text-slate-900">2026E 共識每股盈餘 (EPS)</td>
+                                <td class="p-3 font-bold text-emerald-600">31.0 ~ 38.0 元</td>
+                                <td class="p-3 text-slate-500">預估全年 EPS 較 2025 年 (19.47元) 年增 60% ~ 95%</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3 font-bold text-slate-900">機構共識目標價區間</td>
+                                <td class="p-3 font-bold text-emerald-600">1,585 ~ 1,740 元 (中位數 1,700 元)</td>
+                                <td class="p-3 text-slate-500">統一投顧給予市場最高 1,700 元，樂觀牛市情境上看 1,900 元</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Dynamic Target Price Simulator Card -->
+            <div class="bg-slate-900 text-white p-6 rounded-xl shadow-lg border border-slate-800 space-y-6">
+                <div>
+                    <span class="bg-indigo-500 text-white text-xs font-bold px-2 py-1 rounded uppercase">Interactive Tool</span>
+                    <h3 class="text-lg font-bold mt-2">🧮 2026 年目標價與潛在報酬動態試算器 (Valuation Simulator)</h3>
+                    <p class="text-xs text-slate-400 mt-1">請拖動下方滑桿調整預估 EPS 與前瞻本益比，即時試算相應的目標價與潛在回報空間：</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Controls -->
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-xs font-semibold mb-1">
+                                <span>預估 2026 全年 EPS (元)</span>
+                                <span id="valEpsDisplay" class="text-amber-400 font-bold text-sm">35.0 元</span>
+                            </div>
+                            <input type="range" id="sliderEPS" min="28.0" max="42.0" step="0.5" value="35.0"
+                                   class="w-full accent-indigo-500 cursor-pointer bg-slate-700 h-2 rounded-lg"
+                                   oninput="updateValuation()">
+                            <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                                <span>熊市 (28.0)</span>
+                                <span>共識均值 (35.0)</span>
+                                <span>牛市 (42.0)</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-xs font-semibold mb-1">
+                                <span>賦予前瞻本益比 (P/E Multiple)</span>
+                                <span id="valPeDisplay" class="text-indigo-400 font-bold text-sm">45.0 倍</span>
+                            </div>
+                            <input type="range" id="sliderPE" min="25.0" max="55.0" step="1.0" value="45.0"
+                                   class="w-full accent-indigo-500 cursor-pointer bg-slate-700 h-2 rounded-lg"
+                                   oninput="updateValuation()">
+                            <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                                <span>保守 (25x)</span>
+                                <span>市場共識 (45x)</span>
+                                <span>樂觀 AI (55x)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Output Card -->
+                    <div class="bg-slate-800/90 p-5 rounded-lg border border-slate-700 flex flex-col justify-between text-center">
+                        <div>
+                            <span class="text-xs text-slate-400 uppercase tracking-wider block">試算預估目標價 (Calculated Target Price)</span>
+                            <span id="simTargetPrice" class="text-3xl font-black text-emerald-400 my-2 block">NT$ 1,575</span>
+                        </div>
+                        <div class="border-t border-slate-700 pt-3 flex justify-around text-xs">
+                            <div>
+                                <span class="text-slate-400 block">基準現價</span>
+                                <span class="font-bold text-slate-200">NT$ 1,195</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 block">預估潛在報酬率</span>
+                                <span id="simReturn" class="font-black text-emerald-400 text-sm">+31.80%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 4: 籌碼結構與法人動向 ==================== -->
+        <section id="tab-chips" class="tab-content hidden space-y-6">
+            <!-- Introductory Section Paragraph -->
+            <div class="bg-indigo-900/5 border-l-4 border-indigo-600 p-4 rounded-r-lg">
+                <h2 class="text-base font-bold text-indigo-950">重點章節導覽：股權集中度與三大法人籌碼戰術拆解</h2>
+                <p class="text-sm text-slate-600 mt-1">
+                    本板塊解析金像電（2368）高度沉澱的股權結構與近期法人資金流向。公司的董監持股與千張大戶合計控制高達 76.65% 的籌碼，浮額極度穩定。同時分析近期外資高檔避險調節與本土投信積極「認養」加碼的拉鋸動向。
+                </p>
+            </div>
+
+            <!-- Ownership Summary Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Donut Chart of Ownership Structure -->
+                <div class="lg:col-span-5 bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 mb-1">股權結構與籌碼分布比率</h3>
+                        <p class="text-xs text-slate-500 mb-4">董監與千張大戶高度鎖碼，籌碼集中度達 76.65%</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chartOwnership"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chips Flow Analysis Table -->
+                <div class="lg:col-span-7 bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 mb-3">近期三大法人進出與籌碼動向細節</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs text-left text-slate-600">
+                                <thead class="bg-slate-100 text-slate-700 uppercase font-semibold">
+                                    <tr>
+                                        <th class="p-2.5">籌碼類別 / 法人機構</th>
+                                        <th class="p-2.5">庫存比重 / 買賣張數</th>
+                                        <th class="p-2.5">籌碼特徵與關鍵解讀</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="p-2.5 font-bold text-slate-900">董監事持股比率</td>
+                                        <td class="p-2.5 font-bold text-indigo-700">24.89%</td>
+                                        <td class="p-2.5 text-slate-600">經營團隊持股極為穩定，營運決策利益與股東高度一致。</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="p-2.5 font-bold text-slate-900">千張大戶持股比率</td>
+                                        <td class="p-2.5 font-bold text-indigo-700">54.81%</td>
+                                        <td class="p-2.5 text-slate-600">籌碼沉澱於核心家族與長線機構手中，散戶浮額極少。</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="p-2.5 font-bold text-slate-900">外資法人 (Foreign)</td>
+                                        <td class="p-2.5 font-bold text-rose-600">21.84% (-1,981張 / 5日)</td>
+                                        <td class="p-2.5 text-slate-600">基於高檔波段獲利了結與全球總體變數，進行避險調節賣超。</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="p-2.5 font-bold text-slate-900">本土投信 (Investment Trust)</td>
+                                        <td class="p-2.5 font-bold text-emerald-600">+5,208 ~ +5,209張 (5日)</td>
+                                        <td class="p-2.5 text-slate-600">著眼於下半年 AI 伺服器旺季與擴產題材，大舉買超「認養」。</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="p-2.5 font-bold text-slate-900">自營商 (Dealers)</td>
+                                        <td class="p-2.5 font-bold text-emerald-600">+151張 (5日)</td>
+                                        <td class="p-2.5 text-slate-600">避險與自有操作部位維持中性偏多布局。</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-3 bg-emerald-50 rounded-lg text-xs text-emerald-900 flex items-center gap-2">
+                        <span>💡</span>
+                        <span><strong>籌碼結論：</strong> 近 5 日三大法人合計淨買超達 <strong>+3,379 張</strong>，內資投信展現強勁承接買壓，完全消化外資高檔調節賣盤。</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 5: 亞馬遜結盟與全球擴產 ==================== -->
+        <section id="tab-catalysts" class="tab-content hidden space-y-6">
+            <!-- Introductory Section Paragraph -->
+            <div class="bg-indigo-900/5 border-l-4 border-indigo-600 p-4 rounded-r-lg">
+                <h2 class="text-base font-bold text-indigo-950">重點章節導覽：亞馬遜（Amazon）策略入股與全球產能布局</h2>
+                <p class="text-sm text-slate-600 mt-1">
+                    本板塊深度剖析 2026 年 9 月亞馬遜（AWS）直接策略入股金像電的產業戰略意涵，以及公司因應龐大訂單所展開的全球擴產計畫（包含台灣楊梅新廠、泰國巴真府一/二期與中國蘇州二廠）。這是 CSP 巨擘首度直接入股台灣 PCB 廠，代表極高的供應鏈 binding 與訂單壟斷力。
+                </p>
+            </div>
+
+            <!-- Amazon Strategic Deal Banner -->
+            <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 rounded-xl shadow-md border border-indigo-900 space-y-4">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border-b border-indigo-800 pb-3">
+                    <div>
+                        <span class="bg-amber-500 text-slate-950 font-black text-xs px-2.5 py-0.5 rounded uppercase">歷史首例策略結盟</span>
+                        <h3 class="text-lg font-bold mt-1">美商亞馬遜 (Amazon) 策略性入股金像電 15.89 億元</h3>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-slate-400 block">認購私募股數 / 單價</span>
+                        <span class="text-sm font-bold text-amber-300">1,856,308 股 @ NT$ 856 元 (三年閉鎖期)</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    <div class="bg-slate-800/80 p-3 rounded-lg border border-slate-700">
+                        <span class="font-bold text-indigo-300 block mb-1">1. 鎖定次世代專屬產能</span>
+                        <p class="text-slate-300">
+                            應對 Amazon 自研晶片 Trainium 4 (Trn4) 世代更新。升級至「HDI 加高層板混壓厚板」極高難度工藝，直接入股鎖定產能優先權。
+                        </p>
+                    </div>
+                    <div class="bg-slate-800/80 p-3 rounded-lg border border-slate-700">
+                        <span class="font-bold text-indigo-300 block mb-1">2. 搶佔稀缺尖端料源</span>
+                        <p class="text-slate-300">
+                            M8/M9 級銅箔基板與 LDK2 玻纖布極度緊俏。終端 CSP 巨擘以股東身分向上游材料廠爭取專案配額，確保料源無虞。
+                        </p>
+                    </div>
+                    <div class="bg-slate-800/80 p-3 rounded-lg border border-slate-700">
+                        <span class="font-bold text-indigo-300 block mb-1">3. 彈性供貨調配機制</span>
+                        <p class="text-slate-300">
+                            相較傳統剛性長期採購協議，股東同盟關係讓 Amazon 在面對架構微調時，具備更高的供貨調配彈性與供應鏈合作效率。
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Global Capacity Expansion Table & CapEx Plan -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                    <h3 class="text-base font-bold text-slate-900">資本支出與全球生產基地產能重塑 (CapEx & Capacity)</h3>
+                    <span class="text-xs bg-indigo-50 text-indigo-700 font-bold px-3 py-1 rounded-full border border-indigo-200">
+                        2026 資本支出上修至 190 億元
+                    </span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left text-slate-600">
+                        <thead class="bg-slate-100 text-slate-700 uppercase font-semibold">
+                            <tr>
+                                <th class="p-3">生產基地</th>
+                                <th class="p-3">擴產時程與規模</th>
+                                <th class="p-3">目標產品線與戰略定位</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3 font-bold text-slate-900">台灣 (中壢廠、楊梅新廠)</td>
+                                <td class="p-3 text-indigo-700 font-medium">楊梅租賃廠 2026Q3 投產，產能年增 +50%</td>
+                                <td class="p-3">超高層 UBB、NVIDIA 核心算力板與尖端 ASIC 首批研發量產中心。</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3 font-bold text-slate-900">泰國 (巴真府新廠)</td>
+                                <td class="p-3 text-emerald-600 font-bold">二期 2026 下半年~2027 投產，產能擴增 5~6 倍</td>
+                                <td class="p-3">打造大型非中國 (Non-China) 樞紐，外資預期泰國未來營收貢獻達 30%~40%。</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3 font-bold text-slate-900">中國 (蘇州一/二廠、常熟廠)</td>
+                                <td class="p-3 text-slate-700 font-medium">蘇州二廠 2027 下半年投產增設 HDI 厚板線</td>
+                                <td class="p-3">承接成熟伺服器主板、高速網通板及大規模標準化 AI 加速卡量產。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 6: 熊市警訊與風險評估 ==================== -->
+        <section id="tab-risks" class="tab-content hidden space-y-6">
+            <!-- Introductory Section Paragraph -->
+            <div class="bg-indigo-900/5 border-l-4 border-indigo-600 p-4 rounded-r-lg">
+                <h2 class="text-base font-bold text-indigo-950">重點章節導覽：熊市情境分析、會計檢測與潛在紅旗警訊</h2>
+                <p class="text-sm text-slate-600 mt-1">
+                    本板塊秉持極嚴格的研究準則，進行批判性思維與「熊市情境分析」(Bear Case)。內容涵蓋上游高階原材料供需、高額資本支出帶來的折舊槓桿壓力、同業海外擴產削價競爭，以及跨國營運的匯率風險。
+                </p>
+            </div>
+
+            <!-- Red Flags & Risks Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Risk 1 -->
+                <div class="bg-white p-5 rounded-xl border border-rose-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center space-x-2 text-rose-600 mb-2">
+                            <span class="text-base">⚠️</span>
+                            <h3 class="font-bold text-sm text-slate-900">1. 原材料供需緊張與成本上漲風險</h3>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            AI 伺服器板高度仰賴 M8/M9 級銅箔基板、第二代低介電玻纖布 (LDK2) 及專用銅箔。若上游材料產能擴充不及導致交期遞延，或國際原物料價格暴漲，將壓抑生產節奏與單季毛利率表現。
+                        </p>
+                    </div>
+                    <div class="mt-4 p-2 bg-rose-50 rounded text-[11px] text-rose-800 font-medium">
+                        熊市衝擊：毛利率可能下滑 2.0% ~ 3.5%
+                    </div>
+                </div>
+
+                <!-- Risk 2 -->
+                <div class="bg-white p-5 rounded-xl border border-rose-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center space-x-2 text-rose-600 mb-2">
+                            <span class="text-base">⚠️</span>
+                            <h3 class="font-bold text-sm text-slate-900">2. 巨額資本支出與固定折舊槓桿風險</h3>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            2026~2028 年每年規劃維持 170 億 ~ 200 億元的高額資本支出。若全球 CSP 的 AI 資本支出出現週期性放緩，龐大的新建廠房與機器設備折舊，將在產能利用率下滑時對營業利益率造成強烈負向槓桿。
+                        </p>
+                    </div>
+                    <div class="mt-4 p-2 bg-rose-50 rounded text-[11px] text-rose-800 font-medium">
+                        熊市衝擊：固定費用率上升，營業利益率承受壓力
+                    </div>
+                </div>
+
+                <!-- Risk 3 -->
+                <div class="bg-white p-5 rounded-xl border border-rose-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center space-x-2 text-rose-600 mb-2">
+                            <span class="text-base">⚠️</span>
+                            <h3 class="font-bold text-sm text-slate-900">3. 同業東南亞產能集中開出之競爭風險</h3>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            競爭對手如健鼎、滬士電等均在泰國積極布建產能。當各大廠海外新廠於 2026 年底至 2027 年相繼投產後，中高階板材可能面臨市場供需失衡與價格競爭，良率控管將成為獲利分歧關鍵。
+                        </p>
+                    </div>
+                    <div class="mt-4 p-2 bg-rose-50 rounded text-[11px] text-rose-800 font-medium">
+                        熊市衝擊：中高階產品 ASP 面臨小幅壓檢考驗
+                    </div>
+                </div>
+
+                <!-- Risk 4 -->
+                <div class="bg-white p-5 rounded-xl border border-rose-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center space-x-2 text-rose-600 mb-2">
+                            <span class="text-base">⚠️</span>
+                            <h3 class="font-bold text-sm text-slate-900">4. 匯率波動與跨國新廠良率爬坡風險</h3>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            營收多以美元計價，營運基地分散於台灣、中國與泰國，美元對新台幣、人民幣與泰銖波動將直接影響業外匯兌。泰國新廠的人員培訓與良率爬坡速度仍需密切追蹤。
+                        </p>
+                    </div>
+                    <div class="mt-4 p-2 bg-rose-50 rounded text-[11px] text-rose-800 font-medium">
+                        熊市衝擊：新廠開辦初期可能短期拉低綜合毛利率
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 7: 投資總結與評級決策 ==================== -->
+        <section id="tab-verdict" class="tab-content hidden space-y-6">
+            <!-- Introductory Section Paragraph -->
+            <div class="bg-indigo-900/5 border-l-4 border-indigo-600 p-4 rounded-r-lg">
+                <h2 class="text-base font-bold text-indigo-950">重點章節導覽：首席股權分析師總結與評級決策</h2>
+                <p class="text-sm text-slate-600 mt-1">
+                    本板塊為本份研究報告的最終結論。匯整看多論述 (Investment Thesis)、核心風險 (Key Risks) 以及 12 個月預期目標價與潛在空間，為機構投資人提供明確的行動指南。
+                </p>
+            </div>
+
+            <!-- Investment Rating Hero Card -->
+            <div class="bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 text-white p-6 rounded-2xl shadow-xl border border-indigo-800">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div class="space-y-2 text-center md:text-left">
+                        <span class="bg-emerald-500 text-slate-950 text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                            FINAL VERDICT 投資評級
+                        </span>
+                        <h2 class="text-3xl font-black tracking-tight text-white">強烈買進 (BUY / OUTPERFORM)</h2>
+                        <p class="text-xs text-indigo-200">金像電已跳脫傳統 PCB 週期框架，成為全球 AI 算力基礎設施的核心權值股。</p>
+                    </div>
+                    <div class="bg-slate-800/90 p-4 rounded-xl border border-slate-700 text-center shrink-0 min-w-[200px]">
+                        <span class="text-xs text-slate-400 block mb-1">12 個月目標價 (Target Price)</span>
+                        <span class="text-3xl font-black text-emerald-400">NT$ 1,700</span>
+                        <span class="text-xs text-emerald-300 font-bold block mt-1">潛在上行空間 +42.26%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3 Bull Investment Thesis vs 3 Core Risks -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 3 Bull Investment Thesis -->
+                <div class="bg-white p-5 rounded-xl border border-emerald-200 shadow-sm space-y-3">
+                    <h3 class="text-base font-bold text-emerald-900 flex items-center gap-2">
+                        <span>🟢</span> 3 個買入 / 看多理由 (Bull Thesis)
+                    </h3>
+                    <ul class="space-y-3 text-xs text-slate-700">
+                        <li class="flex items-start gap-2">
+                            <span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px] shrink-0">1</span>
+                            <span><strong>亞馬遜（Amazon）策略入股鎖定 Trn4 專屬訂單：</strong> 建立直接同盟關係，享有次世代專用板材之訂單獨占性與尖端料源優先配額。</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px] shrink-0">2</span>
+                            <span><strong>AI 伺服器與 800G/1.6T 交換器雙引擎強勁：</strong> 產品層數拉升至 30~56 層與高階 HDI 混壓，帶動平均單價 (ASP) 與毛利率（34%+）結構性重估。</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px] shrink-0">3</span>
+                            <span><strong>全球擴產效益顯現與高盈餘成長：</strong> 楊梅與泰國新廠接力投產，2026E EPS 上看 31~38 元，獲利爆發力傲視台股電子零組件族群。</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 3 Core Risks -->
+                <div class="bg-white p-5 rounded-xl border border-rose-200 shadow-sm space-y-3">
+                    <h3 class="text-base font-bold text-rose-900 flex items-center gap-2">
+                        <span>🔴</span> 3 個核心風險 (Key Risks)
+                    </h3>
+                    <ul class="space-y-3 text-xs text-slate-700">
+                        <li class="flex items-start gap-2">
+                            <span class="bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded text-[10px] shrink-0">1</span>
+                            <span><strong>高階 M8/M9 銅箔基板缺料風險：</strong> 上游關鍵材料若供應短缺，可能影響生產節奏與單季交貨速度。</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded text-[10px] shrink-0">2</span>
+                            <span><strong>每年 170~200 億 CapEx 之折舊壓力：</strong> 若 CSP 客戶資本支出陷入週期性修正，高額折舊可能壓抑營業利益率。</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded text-[10px] shrink-0">3</span>
+                            <span><strong>泰國新廠良率爬坡與競業價格戰：</strong> 同業東南亞產能集中開出後，中高階產品之價格與良率競爭可能加劇。</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 text-xs py-6 border-t border-slate-800 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center space-y-2">
+            <p>金像電 (2368) 深度股權研究報告 — 僅供專業投資人參考，不構成任何型式之投資建議。</p>
+            <p class="text-slate-500">Data Source: 公開資訊觀測站, FactSet, 統一投顧, 券商研究報告.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Tab Switcher Logic
+        function switchTab(tabId) {
+            // Hide all contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            // Show selected content
+            const targetContent = document.getElementById(tabId);
+            if (targetContent) {
+                targetContent.classList.remove('hidden');
+            }
+
+            // Reset tab button styles
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 whitespace-nowrap";
+            });
+
+            // Highlight active button
+            const activeBtn = document.getElementById('btn-' + tabId);
+            if (activeBtn) {
+                activeBtn.className = "tab-btn px-3 py-2 rounded-lg bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200 whitespace-nowrap";
+            }
+        }
+
+        // Target Price Valuation Simulator Dynamic Function
+        function updateValuation() {
+            const eps = parseFloat(document.getElementById('sliderEPS').value);
+            const pe = parseFloat(document.getElementById('sliderPE').value);
+            const currentPrice = 1195.0;
+
+            document.getElementById('valEpsDisplay').innerText = eps.toFixed(1) + " 元";
+            document.getElementById('valPeDisplay').innerText = pe.toFixed(1) + " 倍";
+
+            const targetPrice = Math.round(eps * pe);
+            const returnPct = (((targetPrice - currentPrice) / currentPrice) * 100).toFixed(2);
+
+            document.getElementById('simTargetPrice').innerText = "NT$ " + targetPrice.toLocaleString();
+            
+            const returnEl = document.getElementById('simReturn');
+            if (returnPct >= 0) {
+                returnEl.innerText = "+" + returnPct + "%";
+                returnEl.className = "font-black text-emerald-400 text-sm";
+            } else {
+                returnEl.innerText = returnPct + "%";
+                returnEl.className = "font-black text-rose-400 text-sm";
+            }
+        }
+
+        // Initialize Charts when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // Common Chart Config Defaults
+            Chart.defaults.font.family = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+            Chart.defaults.color = '#64748b';
+
+            // 1. Chart Revenue Segment (Donut / Bar comparison)
+            const ctxSegment = document.getElementById('chartRevenueSegment').getContext('2d');
+            new Chart(ctxSegment, {
+                type: 'doughnut',
+                data: {
+                    labels: ['伺服器 (通用與 AI)', '網通設備 (交換器)', '筆記型電腦 (商用/AI)', '其他 (工控/基地台)'],
+                    datasets: [{
+                        data: [80, 10, 7, 3],
+                        backgroundColor: ['#4f46e5', '#0284c7', '#64748b', '#94a3b8'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 12, padding: 15, font: { size: 11 } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + context.raw + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 2. Chart Monthly Revenue 2026 (Bar + Line YoY)
+            const ctxMonthly = document.getElementById('chartMonthlyRevenue').getContext('2d');
+            new Chart(ctxMonthly, {
+                type: 'bar',
+                data: {
+                    labels: ['4月', '5月', '6月 (Q2)', '7月', '8月 (新高)', '9月'],
+                    datasets: [
+                        {
+                            type: 'bar',
+                            label: '合併營收 (億元)',
+                            data: [72.90, 87.73, 82.55, 100.15, 103.84, 93.20],
+                            backgroundColor: '#6366f1',
+                            borderRadius: 4
+                        },
+                        {
+                            type: 'line',
+                            label: '年增率 YoY (%)',
+                            data: [58.41, 87.30, 78.22, 65.00, 76.39, 55.46],
+                            borderColor: '#10b981',
+                            borderWidth: 2.5,
+                            pointBackgroundColor: '#10b981',
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: '營收 (億元)', font: { size: 10 } }
+                        },
+                        y1: {
+                            position: 'right',
+                            beginAtZero: true,
+                            grid: { drawOnChartArea: false },
+                            title: { display: true, text: 'YoY (%)', font: { size: 10 } }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+                    }
+                }
+            });
+
+            // 3. Chart Margins Trend (Line Chart)
+            const ctxMargins = document.getElementById('chartMarginsTrend').getContext('2d');
+            new Chart(ctxMargins, {
+                type: 'line',
+                data: {
+                    labels: ['2023全年', '2024全年', '2025全年', '2026 Q1', '2026 Q2'],
+                    datasets: [
+                        {
+                            label: '營業毛利率 (%)',
+                            data: [25.71, 29.26, 32.80, 34.81, 34.65],
+                            borderColor: '#4f46e5',
+                            backgroundColor: '#4f46e5',
+                            borderWidth: 2.5,
+                            tension: 0.2
+                        },
+                        {
+                            label: '營業利益率 (%)',
+                            data: [17.10, 20.71, 23.40, 26.85, 26.43],
+                            borderColor: '#0284c7',
+                            backgroundColor: '#0284c7',
+                            borderWidth: 2,
+                            tension: 0.2
+                        },
+                        {
+                            label: '稅後淨利率 (%)',
+                            data: [11.74, 14.42, 16.01, 18.04, 19.70],
+                            borderColor: '#10b981',
+                            backgroundColor: '#10b981',
+                            borderWidth: 2,
+                            tension: 0.2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            title: { display: true, text: '百分比 (%)', font: { size: 10 } }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+                    }
+                }
+            });
+
+            // 4. Chart Ownership Structure (Pie / Donut)
+            const ctxOwnership = document.getElementById('chartOwnership').getContext('2d');
+            new Chart(ctxOwnership, {
+                type: 'pie',
+                data: {
+                    labels: ['千張大戶持股', '董監事持股', '外資法人', '其他/散戶籌碼'],
+                    datasets: [{
+                        data: [54.81, 24.89, 21.84, 23.35],
+                        backgroundColor: ['#312e81', '#4f46e5', '#f43f5e', '#cbd5e1'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 12, padding: 12, font: { size: 11 } }
+                        }
+                    }
+                }
+            });
+
+            // Run initial dynamic valuation calculation
+            updateValuation();
+        });
+    </script>
+</body>
+</html>
