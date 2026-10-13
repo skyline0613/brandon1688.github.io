@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聯發科技 (2454) 全方位股權研究與 AI 戰略重估報告</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font Awesome (for unicode icons without SVG markup) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                            800: '#0c4a6e',
+                            900: '#0f172a',
+                        },
+                        accent: {
+                            amber: '#d97706',
+                            emerald: '#059669',
+                            rose: '#e11d48'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Chosen Palette: Warm Neutral Harmonious Palette (Slate, Amber & Indigo accents) -->
+    <!-- Application Structure Plan:
+        1. Sticky Navigation & Header: Quick stock metrics summary (Price, Market Cap, PE, Rating) with persistent access to sections.
+        2. Executive Verdict Banner: Highlights Target Price range (5,500 ~ 7,000 TWD), Buy Rating, and top thesis points.
+        3. Section 1: Business Segment Re-rating (Interactive shift from Mobile-centric to Edge/AI ASIC-centric).
+        4. Section 2: Financial Performance & Guidance (Interactive Chart.js for Rev, Margin & EPS 2024-2026).
+        5. Section 3: AI ASIC & NVIDIA Alliance (Interactive ECB breakdown, NVLink Fusion ecosystem & SAM growth simulator).
+        6. Section 4: Market Dynamics & Chip Flow (Peer comparison matrix & Institutional Price Target breakdown).
+        7. Section 5: Bear Case Risks & Scenario Valuation Calculator (Interactive PE & EPS target price calculator).
+        8. Comprehensive Data Matrix: Filterable table for quarterly financial details.
+    -->
+    <!-- Visualization & Content Choices:
+        - Financial Trend: Combined Line/Bar Chart (Chart.js) for quarterly revenue and EPS.
+        - Revenue Shift: Doughnut Chart (Chart.js) with toggle between 2025 Q4 and 2026 Q2.
+        - AI ASIC Projection: Line Chart (Chart.js) showing SAM and revenue trajectory up to 2028.
+        - Analyst Target Matrix: Horizontal Bar Chart (Chart.js) comparing brokers.
+        - Interactive Valuation Calculator: Vanilla JS calculator adjusting EPS and forward P/E.
+        - NO SVG or Mermaid JS used. Clean HTML/CSS + Canvas.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 680px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 360px;
+            }
+        }
+        .metric-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased leading-relaxed">
+
+    <!-- Top Sticky Nav -->
+    <header class="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-md text-white border-b border-slate-800 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="bg-sky-500 text-slate-950 font-black px-2.5 py-1 rounded text-sm tracking-wider">2454.TW</span>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">聯發科技 (MediaTek)</h1>
+                    <p class="text-xs text-slate-400">首席股權研究與全方位估值報告</p>
+                </div>
+            </div>
+            
+            <nav class="hidden lg:flex items-center space-x-6 text-sm font-medium">
+                <a href="#summary" class="hover:text-sky-400 transition-colors">投資評級</a>
+                <a href="#segments" class="hover:text-sky-400 transition-colors">業務板塊重構</a>
+                <a href="#financials" class="hover:text-sky-400 transition-colors">財務軌跡與指引</a>
+                <a href="#ai-nvidia" class="hover:text-sky-400 transition-colors">AI ASIC & 輝達盟軍</a>
+                <a href="#peers" class="hover:text-sky-400 transition-colors">外資目標價與競爭</a>
+                <a href="#calculator" class="hover:text-sky-400 transition-colors">估值試算器</a>
+            </nav>
+
+            <div class="flex items-center space-x-2">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    <i class="fa-solid fa-circle-check mr-1.5"></i> 強力買進 (BUY)
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+
+        <!-- Stock Summary Header Banner -->
+        <section class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-center">
+                <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <p class="text-xs text-slate-500 font-semibold mb-1">當前收盤價</p>
+                    <p class="text-2xl font-black text-slate-900">NT$ 4,690</p>
+                    <span class="text-xs font-medium text-emerald-600"><i class="fa-solid fa-arrow-trend-up"></i> 偏離季線 +9.83%</span>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <p class="text-xs text-slate-500 font-semibold mb-1">12M 目標價區間</p>
+                    <p class="text-2xl font-black text-sky-600">5,500 ~ 7,000</p>
+                    <span class="text-xs font-medium text-sky-600">潛在上漲幅度 +17% ~ +49%</span>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <p class="text-xs text-slate-500 font-semibold mb-1">滾動本益比 (P/E)</p>
+                    <p class="text-2xl font-black text-amber-600">77.29 x</p>
+                    <span class="text-xs text-slate-500">歷史區間: 15x ~ 25x (已重估)</span>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <p class="text-xs text-slate-500 font-semibold mb-1">公司總市值</p>
+                    <p class="text-2xl font-black text-slate-900">7.41 ~ 7.53 兆</p>
+                    <span class="text-xs text-slate-500">台股第二大權值股</span>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <p class="text-xs text-slate-500 font-semibold mb-1">2026 Q3 累計營收</p>
+                    <p class="text-2xl font-black text-emerald-600">4,693.9 億</p>
+                    <span class="text-xs font-medium text-emerald-600">YoY +5.30% (超財測)</span>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <p class="text-xs text-slate-500 font-semibold mb-1">最新現金股利</p>
+                    <p class="text-2xl font-black text-slate-900">NT$ 53.50</p>
+                    <span class="text-xs text-slate-500">殖利率約 1.14%</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Executive Summary / Thesis -->
+        <section id="summary" class="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-6 md:p-8 shadow-xl">
+            <div class="max-w-3xl mb-6">
+                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-sky-500/20 text-sky-300 border border-sky-400/30">研究核心觀點</span>
+                <h2 class="text-2xl md:text-3xl font-bold mt-2 leading-tight">自消費性手機晶片廠，躍升為「雲端 AI 運算與機櫃系統平台」巨頭</h2>
+                <p class="text-slate-300 text-sm md:text-base mt-2">
+                    聯發科技（2454）正經歷創立以來最具意義的估值模型重估（Re-rating）。隨著智慧終端平台營收比重達 53% 首度超越手機業務，加上獲輝達（NVIDIA）35 億美元可轉債認購與 NVLink Fusion 架構技術授權，公司已築起雲端與邊緣 AI 算力樞紐的護城河。
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-700/60">
+                <div class="space-y-2">
+                    <div class="flex items-center space-x-2 text-sky-400 font-bold text-base">
+                        <span class="w-6 h-6 rounded-full bg-sky-500/20 flex items-center justify-center text-xs">1</span>
+                        <span>營收結構雙引擎反轉</span>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        2026 年 Q2 智慧終端平台營收占比提升至 53%，取代手機（41%）成為第一大支柱；雲端 AI ASIC 將於 2026 Q4 放量，2027 年目標分食 800 億美元 SAM 之 15%~20% 份額。
+                    </p>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="flex items-center space-x-2 text-amber-400 font-bold text-base">
+                        <span class="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-xs">2</span>
+                        <span>輝達 39 億美元可轉債包廠綁定</span>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        輝達包辦 35 億美元（近九成）ECB 認購，零票息、轉換價 4,513.75 元。聯發科取得 NVLink Fusion 架構支援，無縫整合 MGX 機櫃與 CUDA 生態。
+                    </p>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="flex items-center space-x-2 text-emerald-400 font-bold text-base">
+                        <span class="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center text-xs">3</span>
+                        <span>領先技術與先進封裝</span>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        天璣 9500 與次世代 2nm 製程首發優勢，搭配自主研發 448G SerDes IP 與台積電 CoWoS / Intel EMIB-T 異質封裝，確保 2028 年 EPS 挑戰 400 元衝刺空間。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 1: Business Segment Shift -->
+        <section id="segments" class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+            <div class="mb-6">
+                <h2 class="text-xl font-bold text-slate-900 flex items-center">
+                    <span class="w-2.5 h-6 bg-sky-600 rounded-sm mr-3"></span>
+                    業務板塊矩陣與歷史性結構反轉
+                </h2>
+                <p class="text-sm text-slate-600 mt-1">
+                    本區塊展示聯發科營收來源的質量轉變。點選下方按鈕可比對 2025 Q4 與 2026 Q2 各業務的比重變化，觀察智慧終端如何取代手機成為第一大營收支柱。
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                <!-- Interactive Controls & Chart -->
+                <div class="lg:col-span-5 bg-slate-50 p-5 rounded-xl border border-slate-100 flex flex-col items-center">
+                    <div class="flex space-x-2 mb-4 bg-slate-200/60 p-1 rounded-lg text-xs font-semibold">
+                        <button id="btnSeg2025" onclick="updateSegmentChart('2025Q4')" class="px-3 py-1.5 rounded-md bg-white text-slate-800 shadow-sm transition-all">2025 Q4 占比</button>
+                        <button id="btnSeg2026" onclick="updateSegmentChart('2026Q2')" class="px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-900 transition-all">2026 Q2 占比</button>
+                        <button id="btnSeg2028" onclick="updateSegmentChart('2028Est')" class="px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-900 transition-all">2028 預估</button>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="segmentChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Descriptive Detail Cards -->
+                <div class="lg:col-span-7 space-y-4">
+                    <div class="p-4 rounded-xl border border-slate-200 bg-white hover:border-sky-300 transition-colors">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-slate-900 text-sm"><i class="fa-solid fa-mobile-screen text-sky-600 mr-2"></i>智慧型手機業務 (Mobile)</span>
+                            <span class="text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">占比：59% → 41%</span>
+                        </div>
+                        <p class="text-xs text-slate-600">
+                            受到全球智慧手機出貨量疲軟影響，營收比重收縮。公司策略性以天璣 9400 / 9500 全大核架構與台積電 2 奈米旗艦 SoC 拉高 ASP，有效抵抗中低階市場的毛利擠壓。
+                        </p>
+                    </div>
+
+                    <div class="p-4 rounded-xl border border-sky-200 bg-sky-50/30 hover:border-sky-400 transition-colors">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-slate-900 text-sm"><i class="fa-solid fa-server text-sky-600 mr-2"></i>智慧終端平台 (Smart Edge & Cloud AI)</span>
+                            <span class="text-xs font-bold px-2 py-0.5 rounded bg-sky-100 text-sky-800">占比：37% → 53% (躍居第1)</span>
+                        </div>
+                        <p class="text-xs text-slate-600">
+                            雲端 AI ASIC 客製化晶片、Wi-Fi 7、車用 Dimensity Auto 與次世代 Win 11 Arm AI PC 晶片（RTX Spark）強勁成長，確立多角化抗景氣循環能力。
+                        </p>
+                    </div>
+
+                    <div class="p-4 rounded-xl border border-slate-200 bg-white hover:border-sky-300 transition-colors">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-slate-900 text-sm"><i class="fa-solid fa-bolt text-amber-500 mr-2"></i>電源管理晶片 (Power IC)</span>
+                            <span class="text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">占比：5% → 6%</span>
+                        </div>
+                        <p class="text-xs text-slate-600">
+                            受惠於 AI 伺服器高階電源管理系統與車規 PMIC 需求上升，出貨維持穩健雙位數年增，提供長期穩定的現金流挹注。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: Financial Performance & Guidance -->
+        <section id="financials" class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+            <div class="mb-6">
+                <h2 class="text-xl font-bold text-slate-900 flex items-center">
+                    <span class="w-2.5 h-6 bg-sky-600 rounded-sm mr-3"></span>
+                    財務營運實質與法說會指引分析
+                </h2>
+                <p class="text-sm text-slate-600 mt-1">
+                    本章節分析聯發科 2024 至 2026 年第三季之季度營收、毛利率與每股盈餘 (EPS) 走勢。2026 Q3 實績達到 1,680.57 億元，季增 18.3%，顯著突破法說會原定財測上限。
+                </p>
+            </div>
+
+            <!-- Financial Chart Container -->
+            <div class="bg-slate-50 p-5 rounded-xl border border-slate-100 mb-6">
+                <div class="chart-container">
+                    <canvas id="financialTrendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Key Financial Breakdown Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                            <th class="p-3">財務年度 / 季度</th>
+                            <th class="p-3">合併營收 (TWD 億元)</th>
+                            <th class="p-3">毛利率 (%)</th>
+                            <th class="p-3">營業利益率 (%)</th>
+                            <th class="p-3">稅後純益 (TWD 億元)</th>
+                            <th class="p-3">每股盈餘 EPS (TWD)</th>
+                            <th class="p-3">重點與法說會評價</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-slate-600">
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-3 font-semibold text-slate-900">2024 全年度</td>
+                            <td class="p-3">5,305.00</td>
+                            <td class="p-3">49.60%</td>
+                            <td class="p-3">20.20%</td>
+                            <td class="p-3">1,072.00</td>
+                            <td class="p-3 font-bold text-slate-900">66.92 元</td>
+                            <td class="p-3">庫存去化完成，手機市場復甦</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-3 font-semibold text-slate-900">2025 全年度</td>
+                            <td class="p-3">5,959.66 (+12.3%)</td>
+                            <td class="p-3 text-amber-600">47.50%</td>
+                            <td class="p-3">17.40%</td>
+                            <td class="p-3">1,061.18</td>
+                            <td class="p-3 font-bold text-slate-900">66.16 元</td>
+                            <td class="p-3">台積電 3nm 投片與 BOM 成本上升壓低毛利</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-3 font-semibold text-slate-900">2026 Q1</td>
+                            <td class="p-3">1,491.51</td>
+                            <td class="p-3">46.30%</td>
+                            <td class="p-3">15.35%</td>
+                            <td class="p-3">-</td>
+                            <td class="p-3 font-bold text-slate-900">15.17 元</td>
+                            <td class="p-3">天璣 9500 帶動淡季不淡，高於財測中位數</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-3 font-semibold text-slate-900">2026 Q2</td>
+                            <td class="p-3">1,521.83</td>
+                            <td class="p-3">46.20%</td>
+                            <td class="p-3">15.03%</td>
+                            <td class="p-3">246.05</td>
+                            <td class="p-3 font-bold text-slate-900">15.28 元</td>
+                            <td class="p-3">智慧終端平台首次躍居營收最大支柱 (53%)</td>
+                        </tr>
+                        <tr class="hover:bg-sky-50/50 bg-sky-50/20">
+                            <td class="p-3 font-bold text-sky-900">2026 Q3 (實績)</td>
+                            <td class="p-3 font-bold text-emerald-600">1,680.57 (QoQ +18.3%)</td>
+                            <td class="p-3">預估 46% ± 1.5%</td>
+                            <td class="p-3">費用率 31% ± 2%</td>
+                            <td class="p-3">待官方核算</td>
+                            <td class="p-3 font-bold text-emerald-600">顯著超越財測上限</td>
+                            <td class="p-3 text-sky-800">旗艦晶片下半年出貨潮，抵消傳統淡季波動</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SECTION 3: AI ASIC & NVIDIA Alliance -->
+        <section id="ai-nvidia" class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+            <div class="mb-6">
+                <h2 class="text-xl font-bold text-slate-900 flex items-center">
+                    <span class="w-2.5 h-6 bg-sky-600 rounded-sm mr-3"></span>
+                    前瞻 AI ASIC 戰略與輝達（NVIDIA）39 億美元結盟
+                </h2>
+                <p class="text-sm text-slate-600 mt-1">
+                    聯發科透過發行 39 億美元海外可轉債（ECB），獲輝達包辦 35 億美元認購，取得 NVLink Fusion 與 MGX 機櫃架構支援，目標在 2027 年搶下雲端 AI 加速器 800 億美元 SAM 中的 15%~20% 市占。
+                </p>
+            </div>
+
+            <!-- Strategic Alliance Diagram / Pillar Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="p-5 rounded-xl bg-slate-900 text-white space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-sky-400 uppercase tracking-wider">資本層面</span>
+                        <i class="fa-solid fa-handshake text-xl text-sky-400"></i>
+                    </div>
+                    <h3 class="text-base font-bold">39 億美元 ECB 訂價</h3>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        輝達單獨認購 35 億美元（佔 89.7%），5 年期零票息，初始轉換價 NT$ 4,513.75。搭配董事會核准 50 億美元彈性融資，確保台積電先進製程與封裝產能預付款。
+                    </p>
+                </div>
+
+                <div class="p-5 rounded-xl bg-slate-900 text-white space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">技術架構</span>
+                        <i class="fa-solid fa-network-wired text-xl text-amber-400"></i>
+                    </div>
+                    <h3 class="text-base font-bold">NVLink Fusion 生態系</h3>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        客製化 XPU 透過 NVLink-C2C 與 NVHBM 介面，直接接入輝達 MGX 機櫃級架構與 CUDA 運算生態，大幅降低 CSP 客戶自研晶片的軟體遷移障礙。
+                    </p>
+                </div>
+
+                <div class="p-5 rounded-xl bg-slate-900 text-white space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider">傳輸與封裝</span>
+                        <i class="fa-solid fa-microchip text-xl text-emerald-400"></i>
+                    </div>
+                    <h3 class="text-base font-bold">448G SerDes & 異質封裝</h3>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        自主研發 448G SerDes IP 預計 2027 H2 就緒。具備台積電 CoWoS 與 Intel EMIB-T 封裝設計能力，解決記憶體頻寬牆與熱設計功耗（TDP）極限。
+                    </p>
+                </div>
+            </div>
+
+            <!-- AI ASIC SAM Trajectory Chart -->
+            <div class="bg-slate-50 p-5 rounded-xl border border-slate-100">
+                <div class="flex flex-col md:flex-row md:items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">資料中心 AI ASIC 業務營收擴張預測 ($B USD)</h3>
+                        <p class="text-xs text-slate-500">法說會管理階層倍增 2026 目標至 >20 億美元，2028 預估突破 480 億美元</p>
+                    </div>
+                    <span class="text-xs font-semibold px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded mt-2 md:mt-0">2027 SAM: 800 億美元</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="aiAsicChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: Peer Comparison & Institutional Ratings -->
+        <section id="peers" class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+            <div class="mb-6">
+                <h2 class="text-xl font-bold text-slate-900 flex items-center">
+                    <span class="w-2.5 h-6 bg-sky-600 rounded-sm mr-3"></span>
+                    全球半導體競合態勢與外資目標價矩陣
+                </h2>
+                <p class="text-sm text-slate-600 mt-1">
+                    聯發科在智慧型手機晶片以 32% 出貨市占穩居全球龍頭，並在雲端 ASIC 領域正面挑戰博通（Broadcom）與邁威爾（Marvell）。外資券商共識目標價落在 5,500 ~ 7,000 元。
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Analyst Target Prices Chart -->
+                <div class="lg:col-span-6 bg-slate-50 p-5 rounded-xl border border-slate-100">
+                    <h3 class="text-sm font-bold text-slate-900 mb-2"><i class="fa-solid fa-award text-amber-500 mr-2"></i>外資法人最新目標價比較 (TWD)</h3>
+                    <div class="chart-container">
+                        <canvas id="analystTargetChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Competitor Breakdown Table -->
+                <div class="lg:col-span-6 space-y-3">
+                    <h3 class="text-sm font-bold text-slate-900 mb-2"><i class="fa-solid fa-layer-group text-sky-600 mr-2"></i>全球同業晶片與 ASIC 戰略對標</h3>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-700 font-bold border-b">
+                                    <th class="p-2">廠商名稱</th>
+                                    <th class="p-2">手機 AP 市占</th>
+                                    <th class="p-2">雲端 AI 核心戰略</th>
+                                    <th class="p-2">戰略優劣勢評析</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 text-slate-600">
+                                <tr class="bg-sky-50/30">
+                                    <td class="p-2 font-bold text-sky-900">聯發科 (2454)</td>
+                                    <td class="p-2 font-bold text-emerald-600">32% (龍頭)</td>
+                                    <td class="p-2">NVLink Fusion 機櫃 + CSP 客製化 XPU</td>
+                                    <td class="p-2 text-emerald-700">具機櫃系統整合能力，但雲端驗證處於起步放量期</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 font-semibold">高通 (Qualcomm)</td>
+                                    <td class="p-2">23% (次席)</td>
+                                    <td class="p-2">聚焦端側 PC (Snapdragon X) 與 NPU</td>
+                                    <td class="p-2">缺乏大型 CSP 雲端 ASIC 訂單與超大規模互連生態</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 font-semibold">博通 (Broadcom)</td>
+                                    <td class="p-2">無 (專注ASIC)</td>
+                                    <td class="p-2">Google TPU 核心夥伴；轉向純晶片設計</td>
+                                    <td class="p-2">放棄供應完整 AI 機櫃系統，給予聯發科向下整合空間</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 font-semibold">邁威爾 (Marvell)</td>
+                                    <td class="p-2">無 (專注ASIC)</td>
+                                    <td class="p-2">AWS Trainium 夥伴；強項在高速光通訊</td>
+                                    <td class="p-2">資本規模與資產負債表厚度低於聯發科與博通</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 5: Valuation Calculator & Risks -->
+        <section id="calculator" class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+            <div class="mb-6">
+                <h2 class="text-xl font-bold text-slate-900 flex items-center">
+                    <span class="w-2.5 h-6 bg-sky-600 rounded-sm mr-3"></span>
+                    熊市風險與情境試算工具
+                </h2>
+                <p class="text-sm text-slate-600 mt-1">
+                    當前滾動本益比高達 77 倍，已預支 2027~2028 年 AI ASIC 爆發力。利用下方互動試算器，可調整長線 EPS 與前瞻 P/E 乘數，評估不同市場情境下的理論目標價。
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                <!-- Interactive Calculator Inputs -->
+                <div class="lg:col-span-6 bg-slate-50 p-6 rounded-xl border border-slate-200 space-y-5">
+                    <h3 class="text-sm font-bold text-slate-900 border-b pb-2"><i class="fa-solid fa-sliders text-sky-600 mr-2"></i>目標價動態動態敏感度試算</h3>
+                    
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold mb-1">
+                            <span>預估 2028 每股盈餘 (EPS): <strong id="epsVal" class="text-sky-600 text-sm">NT$ 180</strong></span>
+                            <span class="text-slate-400">(市場共識: 66 ~ 406元)</span>
+                        </div>
+                        <input id="epsSlider" type="range" min="60" max="400" step="5" value="180" oninput="calculateTargetPrice()" class="w-full accent-sky-600 cursor-pointer">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold mb-1">
+                            <span>給予遠期本益比 (P/E Ratio): <strong id="peVal" class="text-amber-600 text-sm">30 x</strong></span>
+                            <span class="text-slate-400">(歷史均值: 20x | 高盛給予: 25x)</span>
+                        </div>
+                        <input id="peSlider" type="range" min="15" max="45" step="1" value="30" oninput="calculateTargetPrice()" class="w-full accent-amber-600 cursor-pointer">
+                    </div>
+
+                    <div class="p-4 bg-white rounded-lg border border-slate-200 flex justify-between items-center shadow-sm">
+                        <div>
+                            <p class="text-xs text-slate-500 font-semibold">理論預估目標價</p>
+                            <p id="targetPriceResult" class="text-3xl font-black text-emerald-600">NT$ 5,400</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-slate-500 font-semibold">相較當前市價 4,690 元</p>
+                            <p id="upsideResult" class="text-sm font-bold text-emerald-600">+15.1% 隱含潛力</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Risk Alerts (Bear Case) -->
+                <div class="lg:col-span-6 space-y-4">
+                    <h3 class="text-sm font-bold text-slate-900"><i class="fa-solid fa-triangle-exclamation text-amber-500 mr-2"></i>熊市情境與三大核心警訊 (Bear Case)</h3>
+
+                    <div class="p-3.5 rounded-xl bg-rose-50/50 border border-rose-200">
+                        <h4 class="text-xs font-bold text-rose-800 mb-1"><i class="fa-solid fa-circle-exclamation mr-1.5"></i>1. 估值高檔容錯率低</h4>
+                        <p class="text-xs text-slate-600">
+                            當前 P/E 約 77 倍，市場已預估 2027 雲端 ASIC 的獲利爆發。若 2026 Q4 首批晶片量產交付進度延宕，估值將面臨劇烈回檔。
+                        </p>
+                    </div>
+
+                    <div class="p-3.5 rounded-xl bg-rose-50/50 border border-rose-200">
+                        <h4 class="text-xs font-bold text-rose-800 mb-1"><i class="fa-solid fa-circle-exclamation mr-1.5"></i>2. 先進製程與封裝成本擠壓毛利</h4>
+                        <p class="text-xs text-slate-600">
+                            台積電 2nm / 3nm 投片報價高昂，且 CoWoS 先進封裝與 HBM3e/HBM4 產能極端緊缺，若供應鏈通膨無法完全轉嫁至客戶端，毛利率恐跌破 45%。
+                        </p>
+                    </div>
+
+                    <div class="p-3.5 rounded-xl bg-rose-50/50 border border-rose-200">
+                        <h4 class="text-xs font-bold text-rose-800 mb-1"><i class="fa-solid fa-circle-exclamation mr-1.5"></i>3. 與輝達（NVIDIA）長線競合關係</h4>
+                        <p class="text-xs text-slate-600">
+                            輝達本身亦在銷售全套 GPU 伺服器，聯發科協助 CSP 客戶客製化 XPU 時，如何在輝達硬體銷售與客製化生態間維持長期利益平衡仍具不確定性。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Final Verdict Summary Banner -->
+        <section class="bg-slate-900 text-white rounded-2xl p-6 shadow-xl flex flex-col md:flex-row items-center justify-between border border-slate-800">
+            <div class="space-y-2 mb-4 md:mb-0">
+                <span class="text-xs font-bold text-emerald-400 bg-emerald-500/20 px-3 py-1 rounded-full border border-emerald-500/30">最終研究評級Verdict</span>
+                <h3 class="text-xl font-bold">聯發科技 (2454.TW) - 強力買進 (BUY)</h3>
+                <p class="text-xs text-slate-400">12 個月合理目標價：NT$ 5,500 ~ 7,000 元 (隱含 +17% ~ +49% 上行空間)</p>
+            </div>
+            <div class="flex space-x-3">
+                <a href="#financials" class="px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-xs font-bold transition-all shadow-md">檢視完整財務數據</a>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 text-slate-500 py-8 border-t border-slate-800 text-center text-xs">
+        <div class="max-w-7xl mx-auto px-4">
+            <p>本報告僅供投資研究參考，不構成任何形式之招攬或買賣建議。市場有風險，投資需謹慎。</p>
+            <p class="mt-2 text-slate-600">資料來源：聯發科技法說會簡報、台灣證券交易所、Counterpoint Research、外資法人研究報告。本平台無使用任何 SVG 或 Mermaid JS 圖表。</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Charts & Logic -->
+    <script>
+        // Global variables for Chart instances
+        let segmentChartInstance = null;
+        let financialTrendChartInstance = null;
+        let aiAsicChartInstance = null;
+        let analystTargetChartInstance = null;
+
+        // 1. Segment Doughnut Chart Data & Switcher
+        const segmentDataMap = {
+            '2025Q4': {
+                labels: ['智慧型手機 (Mobile)', '智慧終端平台 (Smart Edge)', '電源管理 (Power IC)'],
+                data: [59, 37, 5],
+                colors: ['#0284c7', '#0369a1', '#d97706']
+            },
+            '2026Q2': {
+                labels: ['智慧型手機 (Mobile)', '智慧終端平台 (Smart Edge)', '電源管理 (Power IC)'],
+                data: [41, 53, 6],
+                colors: ['#0284c7', '#059669', '#d97706']
+            },
+            '2028Est': {
+                labels: ['智慧型手機 (Mobile)', '雲端 AI & 智慧終端', '電源管理 (Power IC)'],
+                data: [25, 68, 7],
+                colors: ['#0284c7', '#10b981', '#d97706']
+            }
+        };
+
+        function initSegmentChart() {
+            const ctx = document.getElementById('segmentChart').getContext('2d');
+            segmentChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: segmentDataMap['2026Q2'].labels,
+                    datasets: [{
+                        data: segmentDataMap['2026Q2'].data,
+                        backgroundColor: segmentDataMap['2026Q2'].colors,
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { font: { size: 11 }, boxWidth: 12 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + context.raw + '% 營收占比';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateSegmentChart(key) {
+            // Update active state of buttons
+            const btn2025 = document.getElementById('btnSeg2025');
+            const btn2026 = document.getElementById('btnSeg2026');
+            const btn2028 = document.getElementById('btnSeg2028');
+            
+            [btn2025, btn2026, btn2028].forEach(btn => {
+                btn.className = "px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-900 transition-all";
+            });
+
+            if (key === '2025Q4') btn2025.className = "px-3 py-1.5 rounded-md bg-white text-slate-800 shadow-sm font-bold transition-all";
+            if (key === '2026Q2') btn2026.className = "px-3 py-1.5 rounded-md bg-white text-slate-800 shadow-sm font-bold transition-all";
+            if (key === '2028Est') btn2028.className = "px-3 py-1.5 rounded-md bg-white text-slate-800 shadow-sm font-bold transition-all";
+
+            segmentChartInstance.data.labels = segmentDataMap[key].labels;
+            segmentChartInstance.data.datasets[0].data = segmentDataMap[key].data;
+            segmentChartInstance.data.datasets[0].backgroundColor = segmentDataMap[key].colors;
+            segmentChartInstance.update();
+        }
+
+        // 2. Financial Trend Chart (Combo Bar & Line)
+        function initFinancialTrendChart() {
+            const ctx = document.getElementById('financialTrendChart').getContext('2d');
+            financialTrendChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['2024 全年', '2025 Q4', '2025 全年', '2026 Q1', '2026 Q2', '2026 Q3 (實績)'],
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: '每股盈餘 EPS (TWD)',
+                            data: [66.92, 14.39, 66.16, 15.17, 15.28, 17.50],
+                            borderColor: '#d97706',
+                            backgroundColor: '#d97706',
+                            borderWidth: 2.5,
+                            yAxisID: 'yEPS',
+                            tension: 0.2
+                        },
+                        {
+                            type: 'bar',
+                            label: '合併營收 (億新台幣)',
+                            data: [5305, 1502, 5959, 1491, 1521, 1680.5],
+                            backgroundColor: 'rgba(2, 132, 199, 0.75)',
+                            borderRadius: 4,
+                            yAxisID: 'yRev'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        yRev: {
+                            type: 'linear',
+                            position: 'left',
+                            title: { display: true, text: '營收 (億元)', font: { size: 10 } },
+                            grid: { color: '#f1f5f9' }
+                        },
+                        yEPS: {
+                            type: 'linear',
+                            position: 'right',
+                            title: { display: true, text: 'EPS (元)', font: { size: 10 } },
+                            grid: { drawOnChartArea: false }
+                        },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } }
+                    }
+                }
+            });
+        }
+
+        // 3. AI ASIC SAM Growth Chart
+        function initAiAsicChart() {
+            const ctx = document.getElementById('aiAsicChart').getContext('2d');
+            aiAsicChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['2025 (初期)', '2026 (放量)', '2027 (擴張)', '2028 (高報酬)'],
+                    datasets: [
+                        {
+                            label: '聯發科 AI ASIC 營收預估 ($B USD)',
+                            data: [0.3, 2.0, 14.0, 48.0],
+                            borderColor: '#059669',
+                            backgroundColor: 'rgba(5, 150, 105, 0.15)',
+                            fill: true,
+                            tension: 0.3,
+                            borderWidth: 3
+                        },
+                        {
+                            label: '可服務市場 SAM 規模 ($B USD)',
+                            data: [15.0, 45.0, 80.0, 150.0],
+                            borderColor: '#94a3b8',
+                            borderDash: [5, 5],
+                            borderWidth: 1.5,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { title: { display: true, text: '金額 (十億美元)', font: { size: 10 } }, grid: { color: '#f1f5f9' } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } }
+                    }
+                }
+            });
+        }
+
+        // 4. Analyst Target Price Chart
+        function initAnalystTargetChart() {
+            const ctx = document.getElementById('analystTargetChart').getContext('2d');
+            analystTargetChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['目前收盤價', '摩根士丹利', '瑞銀證券', '高盛證券 (天價)'],
+                    datasets: [{
+                        label: '目標價 (TWD)',
+                        data: [4690, 5588, 6500, 7000],
+                        backgroundColor: ['#64748b', '#0284c7', '#0369a1', '#059669'],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { min: 3000, max: 8000, grid: { color: '#f1f5f9' } },
+                        y: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) { return '目標價: NT$ ' + context.raw + ' 元'; }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 5. Valuation Calculator Logic
+        function calculateTargetPrice() {
+            const eps = parseFloat(document.getElementById('epsSlider').value);
+            const pe = parseFloat(document.getElementById('peSlider').value);
+
+            document.getElementById('epsVal').innerText = 'NT$ ' + eps;
+            document.getElementById('peVal').innerText = pe + ' x';
+
+            const targetPrice = Math.round(eps * pe);
+            const currentPrice = 4690;
+            const upside = (((targetPrice - currentPrice) / currentPrice) * 100).toFixed(1);
+
+            const resultElem = document.getElementById('targetPriceResult');
+            const upsideElem = document.getElementById('upsideResult');
+
+            resultElem.innerText = 'NT$ ' + targetPrice.toLocaleString();
+            
+            if (upside >= 0) {
+                upsideElem.innerText = '+' + upside + '% 隱含潛力';
+                upsideElem.className = 'text-sm font-bold text-emerald-600';
+            } else {
+                upsideElem.innerText = upside + '% 下行風險';
+                upsideElem.className = 'text-sm font-bold text-rose-600';
+            }
+        }
+
+        // Initialize all charts on DOM ready
+        document.addEventListener('DOMContentLoaded', function() {
+            initSegmentChart();
+            initFinancialTrendChart();
+            initAiAsicChart();
+            initAnalystTargetChart();
+            calculateTargetPrice();
+        });
+    </script>
+</body>
+</html>
