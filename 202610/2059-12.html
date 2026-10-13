@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>川湖 (2059) 首席股權研究報告與互動分析 dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 680px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 360px;
+            }
+        }
+        .tab-btn.active {
+            border-bottom-color: #3b82f6;
+            color: #1d4ed8;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+
+    <!-- Chosen Palette: Warm Neutral Background (slate-50), Slate Navy Headers (slate-900), Indigo Accent (indigo-600), Emerald/Rose Status Indicators -->
+    
+    <!-- Application Structure Plan:
+        1. Sticky Header & Target Price Overview: Quick status of King Slide (2059.TW), consensus target prices, investment verdict, key ticker summary.
+        2. Navigation Tabs:
+           - 總覽與投資評級 (Verdict & Thesis)
+           - 商業模式與護城河 (Moat & Porter's 5 Forces)
+           - 財務透視與趨勢 (Financial Performance & Interactive Charts)
+           - 估值模型與法人目標價 (Valuation, Forward EPS & Scenarios)
+           - 籌碼動向與警訊檢測 (Chip Flow & 5 Red Flags Radar)
+        3. Dynamic Visualizations using Chart.js:
+           - Financial Trend (Revenue, Gross Margin, EPS)
+           - Valuation & Forward EPS Scenarios
+           - Chip Flow & Concentration Matrix
+        4. Interactive Components: Dynamic DCF/P/E Valuation Slider, Tab switcher, Red-flag interactive checklists.
+    -->
+
+    <!-- Visualization & Content Choices:
+        - Financials: Chart.js Bar + Line dual axis for Revenue & Gross Margin.
+        - EPS Trend: Chart.js Bar Chart for EPS quarters.
+        - Moat: Interactive Cards + Porter 5 Forces custom HTML matrix.
+        - Valuation: Scenario Table + Chart.js Bubble/Bar for Target Price range (9,970 - 15,500).
+        - Red Flags: HTML Warning Cards with metric details (AR expansion, Cash conversion 54.6%, FX risk).
+        - Confirmation: NO SVG used, NO Mermaid JS used. Canvas/HTML layout used strictly.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <div class="min-h-screen flex flex-col">
+        <!-- Header / Stock Ticket Bar -->
+        <header class="bg-slate-900 text-white sticky top-0 z-50 shadow-md">
+            <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <div class="flex items-center gap-3">
+                        <h1 class="text-2xl font-bold tracking-tight">川湖科技 King Slide</h1>
+                        <span class="bg-slate-700 text-slate-200 px-2.5 py-0.5 rounded text-sm font-mono">2059.TW</span>
+                        <span class="bg-emerald-500/20 text-emerald-400 text-xs px-2 py-1 rounded-full border border-emerald-500/30 font-semibold">特許型機構 IP 巨頭</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">全球 AI 伺服器/液冷機力學導軌獨占龍頭 | 研究報告更新基準：2026 年 Q3</p>
+                </div>
+                
+                <div class="flex items-center gap-6 bg-slate-800 px-4 py-2 rounded-lg border border-slate-700 w-full md:w-auto justify-between">
+                    <div>
+                        <div class="text-xs text-slate-400">投資評級 (Rating)</div>
+                        <div class="text-lg font-extrabold text-emerald-400">逢低買入 (Buy on Dips)</div>
+                    </div>
+                    <div class="h-8 w-px bg-slate-700"></div>
+                    <div>
+                        <div class="text-xs text-slate-400">12M 共識目標價</div>
+                        <div class="text-lg font-extrabold text-blue-400">NT$ 12,500 – 15,000</div>
+                    </div>
+                    <div class="h-8 w-px bg-slate-700"></div>
+                    <div>
+                        <div class="text-xs text-slate-400">隱含潛在空間</div>
+                        <div class="text-lg font-extrabold text-indigo-300">+25% ~ +50%</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="bg-white border-b border-slate-200 sticky top-[73px] z-40 shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 flex space-x-8 overflow-x-auto">
+                <button onclick="switchTab('verdict')" id="tab-verdict" class="tab-btn active py-3.5 px-1 border-b-2 border-transparent text-sm font-medium text-slate-600 hover:text-blue-600 whitespace-nowrap">
+                    📌 投資總結與評級
+                </button>
+                <button onclick="switchTab('moat')" id="tab-moat" class="tab-btn py-3.5 px-1 border-b-2 border-transparent text-sm font-medium text-slate-600 hover:text-blue-600 whitespace-nowrap">
+                    🏰 商業模式與五力護城河
+                </button>
+                <button onclick="switchTab('financials')" id="tab-financials" class="tab-btn py-3.5 px-1 border-b-2 border-transparent text-sm font-medium text-slate-600 hover:text-blue-600 whitespace-nowrap">
+                    📊 財務深度透視 (3年趨勢)
+                </button>
+                <button onclick="switchTab('valuation')" id="tab-valuation" class="tab-btn py-3.5 px-1 border-b-2 border-transparent text-sm font-medium text-slate-600 hover:text-blue-600 whitespace-nowrap">
+                    🎯 市場估值與目標價推算
+                </button>
+                <button onclick="switchTab('chips')" id="tab-chips" class="tab-btn py-3.5 px-1 border-b-2 border-transparent text-sm font-medium text-slate-600 hover:text-blue-600 whitespace-nowrap">
+                    🔍 籌碼動態與紅旗警訊
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6">
+
+            <!-- TAB 1: 投資總結與評級 -->
+            <section id="content-verdict" class="space-y-6">
+                <!-- Section Intro -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h2 class="text-xl font-bold text-slate-900 mb-2">執行摘要與投資評級總覽</h2>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        本區塊摘要川湖（2059）的核心投資邏輯、目標價空間與熊市/牛市情境推演。川湖已成功從傳統金屬五金件轉型為全球 AI 伺服器整櫃式液冷架構中無可替代的機構 IP 巨頭。憑藉超過 3,700 項專利護城河與 87% 的極限毛利率，公司展現出超強的定價能力。
+                    </p>
+                </div>
+
+                <!-- Rating Banner -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-gradient-to-br from-emerald-900 to-slate-900 text-white p-6 rounded-xl shadow-md border border-emerald-700/40">
+                        <span class="text-xs uppercase tracking-wider text-emerald-400 font-semibold">Investment Verdict</span>
+                        <h3 class="text-3xl font-extrabold text-emerald-300 mt-2">逢低買入 (Buy on Dips)</h3>
+                        <p class="text-xs text-slate-300 mt-3 leading-relaxed">
+                            鑑於 9 月急單回落導致短線股價修正，目前評價已適度反映季減風險。2026 Q4 起 Vera Rubin 與客製化 ASIC 機種陸續接棒，長趨勢極其優異。
+                        </p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                        <div class="text-xs font-semibold text-slate-400 uppercase">3 大買入 / 看多理由 (Bull Thesis)</div>
+                        <ul class="text-xs text-slate-700 space-y-2">
+                            <li class="flex items-start gap-2">
+                                <span class="text-emerald-500 font-bold">✓</span>
+                                <span><strong>獨占高負載機櫃話語權：</strong>AI 機櫃總重攀升至 1.5 噸以上，全拉伸極限微米級公差僅川湖能完美達標，高負載市占高達 70%~80%。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-emerald-500 font-bold">✓</span>
+                                <span><strong>ASP 乘數級爆發與極致毛利率：</strong>GB200/GB300 機櫃導軌與配套機構總價值突破 4,050 美元，推升 2026 Q2 毛利率突破 87.42% 歷史新高。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-emerald-500 font-bold">✓</span>
+                                <span><strong>強悍財務底蘊與自備擴產：</strong>帳上具備 294.8 億現金，百億川益三五期擴產完全自籌，無股本稀釋風險。</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                        <div class="text-xs font-semibold text-slate-400 uppercase">3 大核心風險 (Key Risks)</div>
+                        <ul class="text-xs text-slate-700 space-y-2">
+                            <li class="flex items-start gap-2">
+                                <span class="text-rose-500 font-bold">⚠️</span>
+                                <span><strong>現金轉換率下滑與應收帳款積壓：</strong>2026 H1 營運現金流僅為淨利的 54.6%，應收帳款膨脹至 104.78 億元。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-rose-500 font-bold">⚠️</span>
+                                <span><strong>專案轉換期拉貨空窗：</strong>9 月營收月減 31% 顯現急單退潮，若新平台驗證遞延易引發季度營收落差。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-rose-500 font-bold">⚠️</span>
+                                <span><strong>高外幣資產之匯率敏感度：</strong>帳上持逾 7 億美元，台幣升值易侵蝕單季 EPS（如 2026/8 月匯損影響 EPS 9 元）。</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Scenario Analysis Table -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="text-base font-bold text-slate-900 mb-4">目標價推算與三情境評估 Matrix (12-Month Horizon)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-600">
+                            <thead class="bg-slate-100 text-slate-700 uppercase font-semibold">
+                                <tr>
+                                    <th class="py-3 px-4">情境分析 (Scenario)</th>
+                                    <th class="py-3 px-4">2026 預估 EPS</th>
+                                    <th class="py-3 px-4">2027 預估 EPS</th>
+                                    <th class="py-3 px-4">給予本益比 (P/E)</th>
+                                    <th class="py-3 px-4">推估目標價</th>
+                                    <th class="py-3 px-4">情境假設條件描述</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200">
+                                <tr class="bg-emerald-50/50">
+                                    <td class="py-3 px-4 font-bold text-emerald-800">牛市情境 (Bull Case)</td>
+                                    <td class="py-3 px-4 font-semibold text-slate-900">NT$ 380.0</td>
+                                    <td class="py-3 px-4 font-semibold text-slate-900">NT$ 520.0</td>
+                                    <td class="py-3 px-4">30.0x</td>
+                                    <td class="py-3 px-4 font-bold text-emerald-600">NT$ 15,600</td>
+                                    <td class="py-3 px-4">Vera Rubin 與 ASIC 機櫃交貨超預期，毛利率維持在 82% 以上高檔，第二供應商分食比例低於 10%。</td>
+                                </tr>
+                                <tr class="bg-white">
+                                    <td class="py-3 px-4 font-bold text-blue-800">基準情境 (Base Case)</td>
+                                    <td class="py-3 px-4 font-semibold text-slate-900">NT$ 245.0</td>
+                                    <td class="py-3 px-4 font-semibold text-slate-900">NT$ 350.0</td>
+                                    <td class="py-3 px-4">35.0x</td>
+                                    <td class="py-3 px-4 font-bold text-blue-600">NT$ 12,250</td>
+                                    <td class="py-3 px-4">市場共識情境：伺服器升級順暢，毛利率回歸 76-78% 常態區間，休士頓廠量產填補北美急單需求。</td>
+                                </tr>
+                                <tr class="bg-rose-50/50">
+                                    <td class="py-3 px-4 font-bold text-rose-800">熊市情境 (Bear Case)</td>
+                                    <td class="py-3 px-4 font-semibold text-slate-900">NT$ 210.0</td>
+                                    <td class="py-3 px-4 font-semibold text-slate-900">NT$ 280.0</td>
+                                    <td class="py-3 px-4">25.0x</td>
+                                    <td class="py-3 px-4 font-bold text-rose-600">NT$ 7,000</td>
+                                    <td class="py-3 px-4">CSP 資本支出放緩、客戶常態砍價（Annual Price Down），南俊等第二供應商大幅侵蝕市占率，台幣強升。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: 商業模式與五力護城河 -->
+            <section id="content-moat" class="hidden space-y-6">
+                <!-- Section Intro -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h2 class="text-xl font-bold text-slate-900 mb-2">業務概覽與競爭護城河解析</h2>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        川湖（2059）的核心競爭優勢來自於「高失效代價、低成本佔比」的不對稱結構。在整櫃式 AI 伺服器中，滑軌僅占總成本不到 1%，但一旦抽拉變形卡死導致液冷管路洩漏，損失將達百萬美元。這種極度保守的可靠度需求，構築了川湖強大的定價權。
+                    </p>
+                </div>
+
+                <!-- Porter's 5 Forces Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Force 1 -->
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-slate-900 text-sm">1. 買方議價能力 (Buyers)</h3>
+                            <span class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded font-semibold">中等偏低</span>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            超大規模 CSP（AWS, MSFT, Google, Meta）雖具備採購規模，但滑軌占機櫃總價低於 1%，且替換供應商需承擔數月的全套熱循環與震動重新驗證成本，轉換成本極高。
+                        </p>
+                    </div>
+
+                    <!-- Force 2 -->
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-slate-900 text-sm">2. 供應商議價能力 (Suppliers)</h3>
+                            <span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded font-semibold">極低</span>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            原料主為高強度鋼材與合金，川湖掌控自製沖壓模具、表面處理與自動化設備開發，不依賴單一原物料供應商，垂直整合度高。
+                        </p>
+                    </div>
+
+                    <!-- Force 3 -->
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-slate-900 text-sm">3. 潛在進入者威脅 (New Entrants)</h3>
+                            <span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded font-semibold">極低</span>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            全球擁有 3,752 項核准專利，周密覆蓋鋼珠軌道、快拆托盤、盲插導正治具與理線臂，新進入者難以在不侵權的前提下實現同等載重與緊湊空間。
+                        </p>
+                    </div>
+
+                    <!-- Force 4 -->
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-slate-900 text-sm">4. 替代品威脅 (Substitutes)</h3>
+                            <span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded font-semibold">極低</span>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            機架式伺服器實體熱插拔與維護的需求無法被軟體或其他物理機構完全取代，高密度 NVL72/Vera Rubin 架構對精密懸臂導航為物理剛性需求。
+                        </p>
+                    </div>
+
+                    <!-- Force 5 -->
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-slate-900 text-sm">5. 同業競爭程度 (Rivalry)</h3>
+                            <span class="bg-indigo-100 text-indigo-800 text-xs px-2 py-0.5 rounded font-semibold">中等 (防守優勢)</span>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            主要競爭對手包含南俊國際 (6584) 與富世達 (6805)。同業雖切入第二供應商（2nd Source），但川湖在旗艦機種（如 GB200/GB300）仍佔有 70%-80% 絕對份額。
+                        </p>
+                    </div>
+
+                    <!-- Summary Moat Box -->
+                    <div class="bg-gradient-to-br from-slate-800 to-slate-900 text-white p-5 rounded-xl shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="text-xs text-indigo-400 font-bold uppercase mb-1">Moat Summary</div>
+                            <h4 class="font-bold text-base">專利網與早期 Design-in 雙重護城河</h4>
+                        </div>
+                        <p class="text-xs text-slate-300 leading-relaxed mt-2">
+                            自晶片廠（NVIDIA）定義參考架構初期即深入參與 CSP/ODM 底層設計，長達數季的規格固化造成「非川湖不可」的技術黏著度。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Peer Comparison Table -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="text-base font-bold text-slate-900 mb-4">伺服器導軌與機構同行業比較 (Peer Benchmarking)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-600">
+                            <thead class="bg-slate-100 text-slate-700 font-semibold">
+                                <tr>
+                                    <th class="py-3 px-4">企業名稱</th>
+                                    <th class="py-3 px-4">代號</th>
+                                    <th class="py-3 px-4">高階 AI 機櫃市占</th>
+                                    <th class="py-3 px-4">最新毛利率 (Q2)</th>
+                                    <th class="py-3 px-4">專利總數 (全球)</th>
+                                    <th class="py-3 px-4">核心競爭戰略與定位</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200">
+                                <tr class="bg-blue-50/50">
+                                    <td class="py-3 px-4 font-bold text-blue-900">川湖 (King Slide)</td>
+                                    <td class="py-3 px-4 font-mono">2059</td>
+                                    <td class="py-3 px-4 font-bold text-emerald-600">70% – 80%</td>
+                                    <td class="py-3 px-4 font-bold text-indigo-600">87.42%</td>
+                                    <td class="py-3 px-4 font-semibold">3,752+ 件</td>
+                                    <td class="py-3 px-4">純度最高之 AI 導軌龍頭，垂直整合模具與自動化設備，具定價權。</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 font-semibold text-slate-800">南俊國際 (Repon)</td>
+                                    <td class="py-3 px-4 font-mono">6584</td>
+                                    <td class="py-3 px-4 text-slate-700">10% – 20% (急升中)</td>
+                                    <td class="py-3 px-4 text-slate-700">約 25% – 35%</td>
+                                    <td class="py-3 px-4 text-slate-700">幾百件</td>
+                                    <td class="py-3 px-4">CSP 第二供應商首選，彈性擴產，搶攻通用與部分高階 AI 遞補份額。</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 font-semibold text-slate-800">富世達 (First Dome)</td>
+                                    <td class="py-3 px-4 font-mono">6805</td>
+                                    <td class="py-3 px-4 text-slate-700">滲透中 (&lt;10%)</td>
+                                    <td class="py-3 px-4 text-slate-700">29.05%</td>
+                                    <td class="py-3 px-4 text-slate-700">轉軸軸承強項</td>
+                                    <td class="py-3 px-4">依託奇鋐集團散熱整機出貨優勢，切入液冷滑軌與機構模組。</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 font-semibold text-slate-800">歐美同業 (如 Accuride, CIS)</td>
+                                    <td class="py-3 px-4 font-mono">美/日企</td>
+                                    <td class="py-3 px-4 text-slate-700">持續萎縮 (&lt;10%)</td>
+                                    <td class="py-3 px-4 text-slate-700">20% – 30%</td>
+                                    <td class="py-3 px-4 text-slate-700">專利多遭川湖迴避</td>
+                                    <td class="py-3 px-4">傳統工業/品牌伺服器供應商，高階市場受川湖專利與良率壓制。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: 財務深度透視 (3年趨勢) -->
+            <section id="content-financials" class="hidden space-y-6">
+                <!-- Section Intro -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h2 class="text-xl font-bold text-slate-900 mb-2">近三年財務表現與獲利結構</h2>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        本區塊展示川湖自 2024 年擺脫庫存調整後的非線性爆發。營收與毛利率在 AI 機櫃拉貨帶動下雙雙創下歷史紀錄。下方圖表與表格詳細列出過去三年至 2026 最新單季的獲利指標。
+                    </p>
+                </div>
+
+                <!-- Financial Visual Charts (Chart.js) -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Chart 1: Revenue & Gross Margin -->
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="text-sm font-bold text-slate-900 mb-1">季合併營收與毛利率走勢 (2024 Q1 - 2026 Q3)</h3>
+                        <p class="text-xs text-slate-500 mb-4">毛利率於 2026 Q2 創下 87.42% 歷史極限紀錄</p>
+                        <div class="chart-container">
+                            <canvas id="revMarginChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Chart 2: EPS Trend -->
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="text-sm font-bold text-slate-900 mb-1">季度每股盈餘 (EPS) 與 淨利成長</h3>
+                        <p class="text-xs text-slate-500 mb-4">2026 上半年累計 EPS 達 110.96 元，半年賺逾一個股本</p>
+                        <div class="chart-container">
+                            <canvas id="epsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comprehensive Financial Table -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="text-base font-bold text-slate-900 mb-4">財務指標數據總覽 (Financial Metrics Table)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-600">
+                            <thead class="bg-slate-100 text-slate-700 font-semibold uppercase">
+                                <tr>
+                                    <th class="py-3 px-4">期間 / 指標</th>
+                                    <th class="py-3 px-4">合併營收 (億元)</th>
+                                    <th class="py-3 px-4">營收年增率 (YoY)</th>
+                                    <th class="py-3 px-4">營業毛利率 (%)</th>
+                                    <th class="py-3 px-4">營業利益率 (%)</th>
+                                    <th class="py-3 px-4">稅後純益 (億元)</th>
+                                    <th class="py-3 px-4">EPS (元)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200">
+                                <tr>
+                                    <td class="py-3 px-4 font-bold text-slate-800">2024 全年</td>
+                                    <td class="py-3 px-4 font-mono">101.29</td>
+                                    <td class="py-3 px-4 font-mono">+75.2%</td>
+                                    <td class="py-3 px-4 font-mono">64.50%</td>
+                                    <td class="py-3 px-4 font-mono">56.20%</td>
+                                    <td class="py-3 px-4 font-mono">61.53</td>
+                                    <td class="py-3 px-4 font-mono font-semibold">64.59</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 font-bold text-slate-800">2025 全年</td>
+                                    <td class="py-3 px-4 font-mono">175.01</td>
+                                    <td class="py-3 px-4 font-mono">+72.77%</td>
+                                    <td class="py-3 px-4 font-mono">76.03%</td>
+                                    <td class="py-3 px-4 font-mono">69.00%</td>
+                                    <td class="py-3 px-4 font-mono">98.37</td>
+                                    <td class="py-3 px-4 font-mono font-semibold">103.23</td>
+                                </tr>
+                                <tr class="bg-blue-50/30">
+                                    <td class="py-3 px-4 font-bold text-blue-900">2026 Q1</td>
+                                    <td class="py-3 px-4 font-mono">54.49</td>
+                                    <td class="py-3 px-4 font-mono">+85.3%</td>
+                                    <td class="py-3 px-4 font-mono">77.74%</td>
+                                    <td class="py-3 px-4 font-mono">67.06%</td>
+                                    <td class="py-3 px-4 font-mono">34.85</td>
+                                    <td class="py-3 px-4 font-mono font-semibold">36.58</td>
+                                </tr>
+                                <tr class="bg-blue-50/50">
+                                    <td class="py-3 px-4 font-bold text-blue-900">2026 Q2</td>
+                                    <td class="py-3 px-4 font-mono font-bold">108.30</td>
+                                    <td class="py-3 px-4 font-mono font-bold text-emerald-600">+156.11%</td>
+                                    <td class="py-3 px-4 font-mono font-bold text-indigo-600">87.42%</td>
+                                    <td class="py-3 px-4 font-mono font-bold text-indigo-600">82.08%</td>
+                                    <td class="py-3 px-4 font-mono font-bold">70.89</td>
+                                    <td class="py-3 px-4 font-mono font-bold text-blue-700">74.38</td>
+                                </tr>
+                                <tr class="bg-indigo-50/60 font-semibold">
+                                    <td class="py-3 px-4 font-bold text-indigo-900">2026 H1 累計</td>
+                                    <td class="py-3 px-4 font-mono">162.79</td>
+                                    <td class="py-3 px-4 font-mono">+98.95%</td>
+                                    <td class="py-3 px-4 font-mono">84.18%</td>
+                                    <td class="py-3 px-4 font-mono">77.05%</td>
+                                    <td class="py-3 px-4 font-mono">105.74</td>
+                                    <td class="py-3 px-4 font-mono font-bold text-indigo-700">110.96</td>
+                                </tr>
+                                <tr class="bg-slate-50">
+                                    <td class="py-3 px-4 font-bold text-slate-800">2026 Q3 累計(單季)</td>
+                                    <td class="py-3 px-4 font-mono font-bold">173.38</td>
+                                    <td class="py-3 px-4 font-mono text-emerald-600">+60.09% (QoQ)</td>
+                                    <td class="py-3 px-4 font-mono">預估 80%+</td>
+                                    <td class="py-3 px-4 font-mono">預估 75%+</td>
+                                    <td class="py-3 px-4 font-mono">單季自結約 90+</td>
+                                    <td class="py-3 px-4 font-mono font-bold">預估 90.0+</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: 市場估值與目標價推算 -->
+            <section id="content-valuation" class="hidden space-y-6">
+                <!-- Section Intro -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h2 class="text-xl font-bold text-slate-900 mb-2">市場估值分析與 Forward P/E 模型</h2>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        本區塊蒐集外資與國內大型法人對川湖未來 1~2 年的獲利估算與目標價給予。投資人可透過互動式模擬器調整 2027 年預估 EPS 及給予的本益比倍數，動態計算隱含目標價與潛在漲跌空間。
+                    </p>
+                </div>
+
+                <!-- Consensus & Target Prices Matrix -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm lg:col-span-2">
+                        <h3 class="text-base font-bold text-slate-900 mb-3">主要研究機構獲利預估與目標價清單 (Consensus)</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs text-slate-600">
+                                <thead class="bg-slate-100 text-slate-700 font-semibold uppercase">
+                                    <tr>
+                                        <th class="py-2.5 px-3">研究機構 / 調查來源</th>
+                                        <th class="py-2.5 px-3">2026 EPS 預估</th>
+                                        <th class="py-2.5 px-3">2027 EPS 預估</th>
+                                        <th class="py-2.5 px-3">目標價 (NT$)</th>
+                                        <th class="py-2.5 px-3">評級與論述重點</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200">
+                                    <tr>
+                                        <td class="py-2.5 px-3 font-bold text-slate-800">FactSet 12位分析師共識</td>
+                                        <td class="py-2.5 px-3 font-mono">中位數 245.49</td>
+                                        <td class="py-2.5 px-3 font-mono font-semibold text-blue-600">中位數 331.24</td>
+                                        <td class="py-2.5 px-3 font-mono font-bold text-slate-900">9,970</td>
+                                        <td class="py-2.5 px-3">獲利持續上修，長線斜率獲共識確認。</td>
+                                    </tr>
+                                    <tr class="bg-blue-50/30">
+                                        <td class="py-2.5 px-3 font-bold text-blue-900">摩根士丹利 (Morgan Stanley)</td>
+                                        <td class="py-2.5 px-3 font-mono">382.77</td>
+                                        <td class="py-2.5 px-3 font-mono font-semibold text-blue-600">502.00+</td>
+                                        <td class="py-2.5 px-3 font-mono font-bold text-emerald-600">15,000</td>
+                                        <td class="py-2.5 px-3">加碼。看好次世代平台放量與專利護城河。</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-2.5 px-3 font-bold text-slate-800">美商美銀 (BofA)</td>
+                                        <td class="py-2.5 px-3 font-mono">正面上修中</td>
+                                        <td class="py-2.5 px-3 font-mono font-semibold text-blue-600">高顯著成長</td>
+                                        <td class="py-2.5 px-3 font-mono font-bold text-emerald-600">14,888</td>
+                                        <td class="py-2.5 px-3">買進。聚焦 Vera Rubin 新平台帶來貢獻。</td>
+                                    </tr>
+                                    <tr class="bg-indigo-50/30">
+                                        <td class="py-2.5 px-3 font-bold text-indigo-900">國內大型本土券商</td>
+                                        <td class="py-2.5 px-3 font-mono">239.03</td>
+                                        <td class="py-2.5 px-3 font-mono font-semibold text-blue-600">341.66</td>
+                                        <td class="py-2.5 px-3 font-mono font-bold text-indigo-600">15,500</td>
+                                        <td class="py-2.5 px-3">以 2027 年 29~30 倍預估 P/E 給予評價。</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Valuation Calculator -->
+                    <div class="bg-slate-900 text-white p-5 rounded-xl shadow-md flex flex-col justify-between">
+                        <div>
+                            <div class="text-xs text-indigo-400 font-bold uppercase mb-1">Interactive Model</div>
+                            <h3 class="text-base font-bold text-white mb-4">目標價動態試算器 (Target Price Calc)</h3>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex justify-between text-xs text-slate-300 mb-1">
+                                        <span>2027 預估 EPS (元):</span>
+                                        <span id="epsValText" class="font-bold text-indigo-300">350 元</span>
+                                    </div>
+                                    <input type="range" id="epsRange" min="250" max="550" step="10" value="350" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500" oninput="calculateTargetPrice()">
+                                </div>
+
+                                <div>
+                                    <div class="flex justify-between text-xs text-slate-300 mb-1">
+                                        <span>目標本益比 (P/E Multiplier):</span>
+                                        <span id="peValText" class="font-bold text-indigo-300">32.0 x</span>
+                                    </div>
+                                    <input type="range" id="peRange" min="20" max="45" step="1" value="32" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500" oninput="calculateTargetPrice()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-800/90 border border-slate-700 p-4 rounded-lg mt-6 text-center">
+                            <div class="text-xs text-slate-400">試算目標價 (Calculated Target Price)</div>
+                            <div id="calculatedPrice" class="text-3xl font-extrabold text-emerald-400 my-1">NT$ 11,200</div>
+                            <div class="text-xs text-slate-400">當前假設評級推估：<span id="calcRating" class="text-emerald-300 font-semibold">逢低布局 (Buy on Pullbacks)</span></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: 籌碼動態與紅旗警訊 -->
+            <section id="content-chips" class="hidden space-y-6">
+                <!-- Section Intro -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h2 class="text-xl font-bold text-slate-900 mb-2">籌碼集中度與會計紅旗風險檢測</h2>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        本區塊深入解析法人與大戶籌碼動態，並嚴格檢視川湖在高獲利下的 5 大潛在會計與營運紅旗警訊。包含營運現金流與淨利背離、應收帳款積壓以及匯率波動對外幣資產的衝擊。
+                    </p>
+                </div>
+
+                <!-- Chips Ownership & Flow Analysis -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="text-sm font-bold text-slate-900 mb-3">籌碼集中度與大戶持股結構 (Chip Distribution)</h3>
+                        <div class="space-y-3 text-xs text-slate-700">
+                            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 flex justify-between items-center">
+                                <div>
+                                    <div class="font-bold text-slate-800">三大法人持股總計</div>
+                                    <div class="text-slate-500">外資居主導地位，投信作波段操作</div>
+                                </div>
+                                <span class="text-sm font-bold text-indigo-600">約 58% – 62%</span>
+                            </div>
+                            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 flex justify-between items-center">
+                                <div>
+                                    <div class="font-bold text-slate-800">1000張以上千張大戶持股比重</div>
+                                    <div class="text-slate-500">籌碼高度沉澱於經營層與國際長期基金</div>
+                                </div>
+                                <span class="text-sm font-bold text-emerald-600">約 65% – 68%</span>
+                            </div>
+                            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 flex justify-between items-center">
+                                <div>
+                                    <div class="font-bold text-slate-800">主力籌碼狀態</div>
+                                    <div class="text-slate-500">9月營收拉回引發散戶離場，籌碼向「沉澱」收攏</div>
+                                </div>
+                                <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-semibold">籌碼重新沉澱中</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="text-sm font-bold text-slate-900 mb-2">營運現金流與淨利背離趨勢</h3>
+                        <p class="text-xs text-slate-500 mb-3">2026 H1 營業淨現金流僅 57.74 億，遠低於淨利 105.74 億 (現金轉換率 54.6%)</p>
+                        <div class="chart-container">
+                            <canvas id="cashFlowChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5 Critical Red Flags Checklist -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="text-base font-bold text-slate-900 mb-4">法務與財務警訊：5 大會計與營運紅旗檢測 (Red Flag Radar)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                        <!-- Red Flag 1 -->
+                        <div class="p-4 rounded-lg bg-rose-50 border border-rose-200">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="bg-rose-600 text-white text-xs font-bold px-2 py-0.5 rounded">警訊 1</span>
+                                <h4 class="font-bold text-rose-900 text-xs">應收帳款大幅膨脹</h4>
+                            </div>
+                            <p class="text-xs text-rose-800 leading-relaxed">
+                                應收帳款及票據自 2025 年底 45.90 億增至 2026 Q2 底 104.78 億元。雖逾期比改善至 9.46%，但集中出貨大量佔用營運資金。
+                            </p>
+                        </div>
+
+                        <!-- Red Flag 2 -->
+                        <div class="p-4 rounded-lg bg-amber-50 border border-amber-200">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="bg-amber-600 text-white text-xs font-bold px-2 py-0.5 rounded">警訊 2</span>
+                                <h4 class="font-bold text-amber-900 text-xs">毛利率回歸常態之壓力</h4>
+                            </div>
+                            <p class="text-xs text-amber-800 leading-relaxed">
+                                87.42% 毛利率含新產品初期高溢價。隨量產放大與 CSP 常態砍價 (Annual Price Down)，毛利率可能向 74-77% 區間收斂。
+                            </p>
+                        </div>
+
+                        <!-- Red Flag 3 -->
+                        <div class="p-4 rounded-lg bg-amber-50 border border-amber-200">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="bg-amber-600 text-white text-xs font-bold px-2 py-0.5 rounded">警訊 3</span>
+                                <h4 class="font-bold text-amber-900 text-xs">單一產品線純度過高 (&gt;98%)</h4>
+                            </div>
+                            <p class="text-xs text-amber-800 leading-relaxed">
+                                伺服器導軌占比升至 99.55%，傳統廚具配件縮至 0.5%。公司失去景氣減震器，完全與 CSP 資本支出週期綁定。
+                            </p>
+                        </div>
+
+                        <!-- Red Flag 4 -->
+                        <div class="p-4 rounded-lg bg-rose-50 border border-rose-200">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="bg-rose-600 text-white text-xs font-bold px-2 py-0.5 rounded">警訊 4</span>
+                                <h4 class="font-bold text-rose-900 text-xs">美元外幣資產匯率敏感度</h4>
+                            </div>
+                            <p class="text-xs text-rose-800 leading-relaxed">
+                                帳上持逾 7 億美元現金，2026/8 月受台幣升值致單月每股侵蝕 9 元 EPS，匯率走勢增加單季獲利不確定性。
+                            </p>
+                        </div>
+
+                        <!-- Red Flag 5 -->
+                        <div class="p-4 rounded-lg bg-amber-50 border border-amber-200">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="bg-amber-600 text-white text-xs font-bold px-2 py-0.5 rounded">警訊 5</span>
+                                <h4 class="font-bold text-amber-900 text-xs">專案轉換期拉貨空窗</h4>
+                            </div>
+                            <p class="text-xs text-amber-800 leading-relaxed">
+                                7、8 月急單退潮後 9 月營收落回 44.64 億。若次世代 Vera Rubin 驗證出現短暫時程遞延，易造成季度成長中斷。
+                            </p>
+                        </div>
+
+                        <!-- Summary Assessment -->
+                        <div class="p-4 rounded-lg bg-slate-900 text-white flex flex-col justify-between">
+                            <div>
+                                <span class="bg-blue-500 text-white text-xs font-bold px-2 py-0.5 rounded">風險總評</span>
+                                <h4 class="font-bold text-white text-xs mt-2">壞帳風險可控，關注現金回收</h4>
+                            </div>
+                            <p class="text-xs text-slate-300 leading-relaxed mt-2">
+                                客戶皆為微軟、AWS、Dell 等極高等級 CSP 與 OEM，壞帳機率極低。重點在應收帳款入帳帶動營運現金流回升。
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-slate-900 text-slate-400 text-xs py-6 border-t border-slate-800 mt-auto">
+            <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    © 2026 首席資深股權研究 (Senior Equity Research). 本報告基於公開資料與嚴格財務分析模型編製。
+                </div>
+                <div class="flex gap-4 text-slate-500">
+                    <span>資料來源：川湖財報 / 法說會 / 公開資訊觀測站</span>
+                    <span>免責聲明：內容僅供研究參考，不構成投資邀請</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- JavaScript logic & Chart Initialization -->
+    <script>
+        // Tab Switcher Logic
+        function switchTab(tabKey) {
+            // Hide all contents
+            const contents = ['verdict', 'moat', 'financials', 'valuation', 'chips'];
+            contents.forEach(id => {
+                document.getElementById(`content-${id}`).classList.add('hidden');
+                document.getElementById(`tab-${id}`).classList.remove('active');
+            });
+
+            // Show active content
+            document.getElementById(`content-${tabKey}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabKey}`).classList.add('active');
+        }
+
+        // Target Price Dynamic Calculation Logic
+        function calculateTargetPrice() {
+            const eps = parseFloat(document.getElementById('epsRange').value);
+            const pe = parseFloat(document.getElementById('peRange').value);
+
+            document.getElementById('epsValText').innerText = `${eps} 元`;
+            document.getElementById('peValText').innerText = `${pe}.0 x`;
+
+            const targetPrice = Math.round(eps * pe);
+            document.getElementById('calculatedPrice').innerText = `NT$ ${targetPrice.toLocaleString()}`;
+
+            const ratingElem = document.getElementById('calcRating');
+            if (targetPrice >= 13000) {
+                ratingElem.innerText = '強烈買入 (Strong Buy)';
+                ratingElem.className = 'text-emerald-400 font-semibold';
+            } else if (targetPrice >= 10000) {
+                ratingElem.innerText = '逢低布局 (Buy on Pullbacks)';
+                ratingElem.className = 'text-blue-400 font-semibold';
+            } else {
+                ratingElem.innerText = '中立 / 持有 (Hold)';
+                ratingElem.className = 'text-amber-400 font-semibold';
+            }
+        }
+
+        // Chart Initialization on Window Load
+        window.addEventListener('DOMContentLoaded', () => {
+
+            // Chart 1: Revenue & Gross Margin (Dual Axis)
+            const ctx1 = document.getElementById('revMarginChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: ['2024 Q1', '2024 Q2', '2024 Q3', '2024 Q4', '2025 Q1', '2025 Q2', '2025 Q3', '2025 Q4', '2026 Q1', '2026 Q2', '2026 Q3'],
+                    datasets: [
+                        {
+                            label: '單季合併營收 (億元)',
+                            data: [19.38, 25.17, 27.20, 29.54, 34.20, 41.80, 47.50, 51.51, 54.49, 108.30, 173.38],
+                            backgroundColor: 'rgba(59, 130, 246, 0.75)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: '營業毛利率 (%)',
+                            data: [62.30, 64.10, 65.80, 66.50, 72.10, 75.40, 77.20, 78.50, 77.74, 87.42, 82.50],
+                            type: 'line',
+                            borderColor: 'rgba(79, 70, 229, 1)',
+                            backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                            borderWidth: 3,
+                            pointRadius: 4,
+                            fill: false,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        x: {
+                            ticks: {
+                                callback: function(val, index) {
+                                    const label = this.getLabelForValue(val);
+                                    return label.length > 16 ? label.substr(0, 16) + '...' : label;
+                                }
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: '營收 (億元)' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            title: { display: true, text: '毛利率 (%)' },
+                            min: 50,
+                            max: 100
+                        }
+                    }
+                }
+            });
+
+            // Chart 2: EPS Trend
+            const ctx2 = document.getElementById('epsChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: ['2024 Q1', '2024 Q2', '2024 Q3', '2024 Q4', '2025 Q1', '2025 Q2', '2025 Q3', '2025 Q4', '2026 Q1', '2026 Q2'],
+                    datasets: [{
+                        label: '單季 EPS (元)',
+                        data: [13.20, 15.80, 17.10, 18.49, 21.30, 24.80, 27.50, 29.63, 36.58, 74.38],
+                        backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true }
+                    },
+                    scales: {
+                        y: {
+                            title: { display: true, text: 'EPS (元)' },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Chart 3: Cash Flow vs Net Profit
+            const ctx3 = document.getElementById('cashFlowChart').getContext('2d');
+            new Chart(ctx3, {
+                type: 'bar',
+                data: {
+                    labels: ['2024 全年', '2025 全年', '2026 H1 累計'],
+                    datasets: [
+                        {
+                            label: '稅後純益 (億元)',
+                            data: [61.53, 98.37, 105.74],
+                            backgroundColor: 'rgba(59, 130, 246, 0.8)'
+                        },
+                        {
+                            label: '營業活動現金流 (億元)',
+                            data: [58.20, 89.10, 57.74],
+                            backgroundColor: 'rgba(244, 63, 94, 0.8)'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                afterBody: function(context) {
+                                    if (context[0].dataIndex === 2) {
+                                        return '註: 2026 H1 現金轉換率降至 54.6% (應收帳款積壓至 104.78 億)';
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            title: { display: true, text: '億元' },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+        });
+    </script>
+</body>
+</html>

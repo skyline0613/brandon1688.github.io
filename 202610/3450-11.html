@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聯鈞光電 (3450) 首席股權研究與互動分析報告</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#095180',
+                            800: '#0c4a6e',
+                            900: '#0c3a59',
+                        },
+                        amberAccent: {
+                            500: '#d97706',
+                            600: '#b45309',
+                        },
+                        emeraldAccent: {
+                            500: '#059669',
+                            600: '#047857',
+                        },
+                        slateBg: '#f8fafc',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 680px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 360px;
+            }
+        }
+        .tab-btn.active {
+            border-bottom: 3px solid #0284c7;
+            color: #0284c7;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body class="bg-slateBg text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Chosen Palette: Warm Neutral Light Slate with Professional Navy/Cyan Accent and Amber/Emerald Indicators -->
+
+    <!-- Application Structure Plan:
+        1. Sticky Top Navigation & Executive Summary Ribbon: Fast navigation across 6 core research modules with live ticker badge (3450.TW) and current market rating [中立/逢低買進 (Hold / Buy on Dips)].
+        2. Module 1: Investment Verdict & Executive Summary - High-level metrics, 3 Bull Catalysts, 3 Bear Risks, Target Price range card.
+        3. Module 2: Business Model & Moat Analysis - Interactive Segment revenue pie chart, Group structure (聯鈞/源傑/捷敏), and Porter's 5 Forces Grid.
+        4. Module 3: Financial Deep Dive (3 Years) - Interactive dynamic Chart.js showing Revenue, Margins (GM/OPM), EPS, and CapEx progression.
+        5. Module 4: Chip Flow & Capital Dynamics - Institutional vs Retail holdings, Margin Trading breakdown, and $3B CB Capital expansion.
+        6. Module 5: Silicon Photonics (SiPh) & CPO Technology Wall - Interactive 5-stage Optical Link Patent Matrix (US/TW patents) & TSMC Alliance positioning.
+        7. Module 6: Dynamic Risk & Valuation Scenario Simulators -
+            a) Dynamic Target Price & Valuation Sensitivity Matrix
+            b) CPO 32-Engine Compound Yield Degrade Simulator (Mathematical proof of CPO yield challenge)
+            c) Parent Equity Net Profit Dilution Calculator (Accounting for Non-controlling interests).
+    -->
+
+    <!-- Visualization & Content Choices:
+        - Revenue & Margins: Chart.js Combo Chart (Bar for Revenue/CapEx, Line for Margins). Goal: Show financial inflections.
+        - Segment Breakdown: Chart.js Donut Chart. Goal: Visually display AI High-End Optical expansion vs Power Semi.
+        - Chip Ownership: Chart.js Bar Chart. Goal: Illustrate Foreign vs Local Fund contrast.
+        - Patent & Moat Structure: Structured HTML Interactive Accordion / Cards. Goal: Clear readability of US/TW Patent numbers.
+        - Risk Simulators: Dynamic JS Calculation Sliders with visual feedback cards. Goal: Interactive learning of yield loss & non-controlling interest dilution.
+        - NO SVG or Mermaid JS used. Standard Canvas Chart.js and Tailwind visual layout only.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <!-- Header Section -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <span class="bg-brand-600 text-white font-bold text-lg px-3 py-1 rounded-md shadow-sm">3450</span>
+                <div>
+                    <h1 class="text-xl font-extrabold text-slate-900 tracking-tight">聯鈞光電 (Elite Advanced Laser) 股權研究總覽</h1>
+                    <p class="text-xs text-slate-500">AI光通訊升級 ‧ 矽光子(SiPh)生態整合 ‧ 資本市場籌碼與風險透視</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right hidden sm:block">
+                    <span class="text-xs text-slate-500 block">投資評級 (Rating)</span>
+                    <span class="text-sm font-extrabold text-amberAccent-600 bg-amber-50 px-2.5 py-0.5 rounded border border-amber-200">HOLD / 逢低加碼</span>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs text-slate-500 block">12個月目標價區間</span>
+                    <span class="text-base font-black text-brand-700">NT$ 580 - 640</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Bar -->
+        <nav class="bg-slate-50 border-t border-slate-200 overflow-x-auto">
+            <div class="max-w-7xl mx-auto px-4 flex space-x-6 text-sm font-medium text-slate-600 whitespace-nowrap">
+                <button onclick="switchTab('verdict')" id="tab-verdict" class="tab-btn py-3 px-1 active hover:text-brand-600 transition">1. 投資評級與概要</button>
+                <button onclick="switchTab('business')" id="tab-business" class="tab-btn py-3 px-1 hover:text-brand-600 transition">2. 業務模型與護城河</button>
+                <button onclick="switchTab('financials')" id="tab-financials" class="tab-btn py-3 px-1 hover:text-brand-600 transition">3. 財務深度透視</button>
+                <button onclick="switchTab('chips')" id="tab-chips" class="tab-btn py-3 px-1 hover:text-brand-600 transition">4. 籌碼與資金結構</button>
+                <button onclick="switchTab('siph')" id="tab-siph" class="tab-btn py-3 px-1 hover:text-brand-600 transition">5. 矽光子/CPO專利</button>
+                <button onclick="switchTab('simulator')" id="tab-simulator" class="tab-btn py-3 px-1 hover:text-brand-600 transition">6. 估值與風險模擬器</button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+
+        <!-- SECTION 1: VERDICT & SUMMARY -->
+        <section id="sec-verdict" class="space-y-6">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <h2 class="text-lg font-bold text-brand-800 mb-2 border-l-4 border-brand-500 pl-3">核心投資論點與總覽 (Investment Executive Summary)</h2>
+                <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                    本報告針對聯鈞光電（3450）進行全方位營運與財務分析。聯鈞已成功由傳統光儲存與 FTTH 封裝廠，轉型為全球前三大半導體雷射二極體（LD）專業封裝測試代工廠。受惠於 AI 伺服器集群對 800G 光模組及矽光子（SiPh）的強勁需求，集團營運轉折點確立。然而，當前歷史本益比已突破 100 倍，反映市場極度樂觀預期，投資人需密切關注高估值下的波動與 CPO 商轉良率挑戰。
+                </p>
+
+                <!-- Key Metrics Cards -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 text-center">
+                        <span class="text-xs text-slate-500 block mb-1">當前市價區間</span>
+                        <span class="text-xl font-bold text-slate-900">NT$ 520 - 550</span>
+                        <span class="text-xs text-slate-400 block mt-1">市值約 NT$760-798億</span>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 text-center">
+                        <span class="text-xs text-slate-500 block mb-1">歷史近四季 P/E</span>
+                        <span class="text-xl font-bold text-amberAccent-600">105.8 - 111.3 倍</span>
+                        <span class="text-xs text-amber-700 block mt-1">位處歷史第 91 百分位</span>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 text-center">
+                        <span class="text-xs text-slate-500 block mb-1">2026 前三季累計營收</span>
+                        <span class="text-xl font-bold text-emeraldAccent-600">NT$ 88.19 億</span>
+                        <span class="text-xs text-emerald-700 block mt-1">年增 +36.47% (超去年全年)</span>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 text-center">
+                        <span class="text-xs text-slate-500 block mb-1">2026 Q2 單季 EPS</span>
+                        <span class="text-xl font-bold text-brand-600">NT$ 2.09 元</span>
+                        <span class="text-xs text-slate-500 block mt-1">單季毛利率 31.54%</span>
+                    </div>
+                </div>
+
+                <!-- Bull & Bear Grid -->
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Bullish Case -->
+                    <div class="bg-emerald-50/50 p-5 rounded-lg border border-emerald-200">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="bg-emerald-600 text-white font-bold text-xs px-2 py-0.5 rounded">BULL CASE</span>
+                            <h3 class="font-bold text-emerald-900">三大看多核心理由</h3>
+                        </div>
+                        <ul class="space-y-2.5 text-xs text-slate-700">
+                            <li class="flex items-start gap-2">
+                                <span class="text-emerald-600 font-bold">1.</span>
+                                <span><strong>高階 AI 光學比重飆升：</strong> 400G/800G 光模組與 COSA 封裝營收佔比自 2025 年 32.7% 提升至 2026Q2 的 45.5%，推升毛利率突破 31%。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-emerald-600 font-bold">2.</span>
+                                <span><strong>卡位台積電矽光子聯盟與 ELSFP 量產：</strong> 外部雷射光源模組 (300mW+) 進入試產，對接 2026-2027 年 CPO 商業化黃金期。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-emerald-600 font-bold">3.</span>
+                                <span><strong>源傑科技 (7917) 全光路專利護城河：</strong> 具備從光源耦合至 SOH 單晶整合全套北美與台灣雙軌專利，發揮設計與代工垂直整合綜效。</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Bearish Case -->
+                    <div class="bg-rose-50/50 p-5 rounded-lg border border-rose-200">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="bg-rose-600 text-white font-bold text-xs px-2 py-0.5 rounded">BEAR CASE</span>
+                            <h3 class="font-bold text-rose-900">三大核心風險與警訊</h3>
+                        </div>
+                        <ul class="space-y-2.5 text-xs text-slate-700">
+                            <li class="flex items-start gap-2">
+                                <span class="text-rose-600 font-bold">1.</span>
+                                <span><strong>估值過高，容錯率極低：</strong> P/E 逾 100 倍，股價已透支未來兩年雙倍成長預期，若基期墊高後增速放緩易引發估值修復估值修正。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-rose-600 font-bold">2.</span>
+                                <span><strong>CPO 複合良率損耗與商轉遞延：</strong> CPO 需整合 32 顆光引擎，單顆良率 95% 時複合良率僅 19%，昂貴 Switch ASIC 報廢風險可能使 CSP 延後採購。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-rose-600 font-bold">3.</span>
+                                <span><strong>非控制權益高比例稀釋：</strong> 捷敏-KY 及源傑科技非 100% 全資持股，母公司股東實質僅能分潤約 60% 淨利，需注意營收與母公司 EPS 之落差。</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: BUSINESS MODEL & PORTER'S 5 FORCES -->
+        <section id="sec-business" class="space-y-6 hidden">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <h2 class="text-lg font-bold text-brand-800 mb-2 border-l-4 border-brand-500 pl-3">業務模型、集團架構與波特五力分析</h2>
+                <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                    聯鈞採取「光通訊封測 ＋ 功率半導體」雙軌營運架構。透過母公司經營高階 COSA 封裝與 ELSFP 光源，結合源傑科技的前端晶片設計與捷敏-KY 的功率半導體現金流，打造非中國製造（Non-China）的彈性跨國供應鏈。
+                </p>
+
+                <div class="grid md:grid-cols-2 gap-8 items-center mb-8">
+                    <!-- Chart container -->
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-700 mb-3 text-center">2026 Q2 產品營收結構比例 (%)</h3>
+                        <div class="chart-container">
+                            <canvas id="revenuePieChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Group Structure Explanation Card -->
+                    <div class="space-y-4">
+                        <h3 class="text-sm font-bold text-slate-800 border-b border-slate-200 pb-2">集團三維架構角色分工</h3>
+                        <div class="bg-slate-50 p-3.5 rounded border border-slate-200 text-xs space-y-1.5">
+                            <div class="flex justify-between font-bold text-brand-700">
+                                <span>1. 聯鈞本體 (3450)</span>
+                                <span>高階 OSAT 代工中心</span>
+                            </div>
+                            <p class="text-slate-600">專注高階 COSA (120萬->350萬顆/月擴產)、ELSFP 外置雷射模組、次微米級主動對準與氣密封裝工藝。產能位於台灣中和與新竹。</p>
+                        </div>
+                        <div class="bg-slate-50 p-3.5 rounded border border-slate-200 text-xs space-y-1.5">
+                            <div class="flex justify-between font-bold text-emerald-700">
+                                <span>2. 源傑科技 (7917 - 持股54.23%)</span>
+                                <span>光學引擎設計 IC 房</span>
+                            </div>
+                            <p class="text-slate-600">Fabless-lite 輕資產模式，主導 800G AOC 矽光子模組與 SOH 晶片架構，全光路專利佈局，製造全數交由聯鈞代工。</p>
+                        </div>
+                        <div class="bg-slate-50 p-3.5 rounded border border-slate-200 text-xs space-y-1.5">
+                            <div class="flex justify-between font-bold text-amber-700">
+                                <span>3. 捷敏-KY (6525 - 持股50-51%)</span>
+                                <span>功率半導體穩定現金流</span>
+                            </div>
+                            <p class="text-slate-600">聚焦 MOSFET、IGBT 車用與工控封測，基地位於上海與合肥，提供集團強健穩定的營運底座與現金流。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Porter's 5 Forces Grid -->
+                <h3 class="text-base font-bold text-slate-800 mb-4">波特五力競爭優勢模型分析 (Porter's 5 Forces)</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <div class="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                        <span class="text-xs font-bold text-brand-600 block mb-1">supplier power</span>
+                        <h4 class="font-bold text-slate-800 text-sm mb-1">供應商議價能力：中等偏低</h4>
+                        <p class="text-xs text-slate-600">多採用客供料 (Consignment) 模式承接 Lumentum、Coherent 等晶粒原廠訂單，不負擔高額原料庫存價格跌價風險。</p>
+                    </div>
+                    <div class="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                        <span class="text-xs font-bold text-brand-600 block mb-1">buyer power</span>
+                        <h4 class="font-bold text-slate-800 text-sm mb-1">買方議價能力：中等</h4>
+                        <p class="text-xs text-slate-600">終端客為亞馬遜、Meta、Google 等 CSP。雖買方強勢，但非中供應鏈（Non-China）先進高功率產能極其稀缺，提升聯鈞防禦力。</p>
+                    </div>
+                    <div class="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                        <span class="text-xs font-bold text-brand-600 block mb-1">threat of substitutes</span>
+                        <h4 class="font-bold text-slate-800 text-sm mb-1">替代品威脅：中高 (技術典範轉移)</h4>
+                        <p class="text-xs text-slate-600">傳統銅線傳輸遭遇熱損極限，可插拔光模組向 LPO 及 CPO 轉進。若 CPO 普及快於預期，傳統 TRX 組裝價值量可能面臨重新分配合。</p>
+                    </div>
+                    <div class="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                        <span class="text-xs font-bold text-brand-600 block mb-1">threat of new entrants</span>
+                        <h4 class="font-bold text-slate-800 text-sm mb-1">新進進入者威脅：低 (高壁壘)</h4>
+                        <p class="text-xs text-slate-600">次微米級主動對準工藝、高功率 300mW+ 熱管理與氣密封裝具極高技術與專利門檻，新進者難以在短時間內複製。</p>
+                    </div>
+                    <div class="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                        <span class="text-xs font-bold text-brand-600 block mb-1">competitive rivalry</span>
+                        <h4 class="font-bold text-slate-800 text-sm mb-1">同業競爭程度：極高</h4>
+                        <p class="text-xs text-slate-600">面對國際光模組龍頭（中際旭創、新易盛、Fabrinet）競爭，源傑須憑藉特有 SOH 矽光專利與極低功耗 (<10W) 搶佔客戶驗證份額。</p>
+                    </div>
+                    <div class="p-4 bg-brand-50 rounded-lg border border-brand-200 flex flex-col justify-center">
+                        <span class="text-xs font-bold text-brand-700 block mb-1">summary</span>
+                        <h4 class="font-bold text-brand-900 text-sm mb-1">護城河綜合評價：中高 (Moat)</h4>
+                        <p class="text-xs text-brand-800">由技術專利、非中國區位合規性及高資本支出形成之代工工藝保護牆。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: FINANCIAL DEEP DIVE -->
+        <section id="sec-financials" class="space-y-6 hidden">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <h2 class="text-lg font-bold text-brand-800 mb-2 border-l-4 border-brand-500 pl-3">財務深度透視 (2024 - 2026 財務營運表現)</h2>
+                <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                    隨著高毛利之 AI 光學次模組與高速模組出貨量增加，聯鈞營業槓桿顯著發酵。2026 年第 2 季營業利益率回升至 21.21%，累計前三季營收 88.19 億元已超越 2025 年全年水準。
+                </p>
+
+                <!-- Financial Combo Chart -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-sm font-bold text-slate-800">合併營收與毛利率 / 營業利益率趨勢圖</h3>
+                        <span class="text-xs text-slate-500">單位：新台幣億元 / %</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="financialChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Financial Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left text-slate-600 border border-slate-200 rounded-lg">
+                        <thead class="text-xs text-slate-700 uppercase bg-slate-100 border-b border-slate-200">
+                            <tr>
+                                <th class="px-4 py-3">財務指標</th>
+                                <th class="px-4 py-3">2024 全年</th>
+                                <th class="px-4 py-3">2025 全年</th>
+                                <th class="px-4 py-3">2026 Q1</th>
+                                <th class="px-4 py-3">2026 Q2</th>
+                                <th class="px-4 py-3 bg-brand-50 text-brand-800">2026 前三季累計</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200">
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-4 py-3 font-bold text-slate-800">合併營收 (億元)</td>
+                                <td class="px-4 py-3">70.83 (估)</td>
+                                <td class="px-4 py-3">85.85</td>
+                                <td class="px-4 py-3">20.87</td>
+                                <td class="px-4 py-3">29.77 (+61% YoY)</td>
+                                <td class="px-4 py-3 font-bold text-brand-700 bg-brand-50/50">88.19 (+36.47% YoY)</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-4 py-3 font-bold text-slate-800">毛利率 (%)</td>
+                                <td class="px-4 py-3">27.0%</td>
+                                <td class="px-4 py-3">31.0% (前三季)</td>
+                                <td class="px-4 py-3">26.0%</td>
+                                <td class="px-4 py-3 font-bold text-emerald-600">31.54%</td>
+                                <td class="px-4 py-3 bg-brand-50/50">-</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-4 py-3 font-bold text-slate-800">營業利益率 (%)</td>
+                                <td class="px-4 py-3">15.0%</td>
+                                <td class="px-4 py-3">20.0% (前三季)</td>
+                                <td class="px-4 py-3">14.0%</td>
+                                <td class="px-4 py-3 font-bold text-emerald-600">21.21%</td>
+                                <td class="px-4 py-3 bg-brand-50/50">-</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-4 py-3 font-bold text-slate-800">每股盈餘 EPS (元)</td>
+                                <td class="px-4 py-3">3.82</td>
+                                <td class="px-4 py-3">5.01</td>
+                                <td class="px-4 py-3">0.69</td>
+                                <td class="px-4 py-3 font-bold text-brand-600">2.09</td>
+                                <td class="px-4 py-3 bg-brand-50/50 font-bold text-brand-700">2.78 (上半年累計)</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-4 py-3 font-bold text-slate-800">每股淨值 (元)</td>
+                                <td class="px-4 py-3">31.20</td>
+                                <td class="px-4 py-3">34.76</td>
+                                <td class="px-4 py-3">-</td>
+                                <td class="px-4 py-3">38.34</td>
+                                <td class="px-4 py-3 bg-brand-50/50">38.34</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-4 py-3 font-bold text-slate-800">純設備資本支出 CapEx (億元)</td>
+                                <td class="px-4 py-3">2.6</td>
+                                <td class="px-4 py-3">11.0</td>
+                                <td class="px-4 py-3">-</td>
+                                <td class="px-4 py-3">-</td>
+                                <td class="px-4 py-3 bg-brand-50/50 font-bold text-amber-700">16.0 (全年預估)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: CHIPS & CAPITAL DYNAMICS -->
+        <section id="sec-chips" class="space-y-6 hidden">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <h2 class="text-lg font-bold text-brand-800 mb-2 border-l-4 border-brand-500 pl-3">籌碼動向與資金結構分析</h2>
+                <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                    當前籌碼面呈現「外資高檔調節、本土投信接盤」的滾動換手態勢。融資與融券處於溫和健康水位，顯示無散戶盲目過熱或異常軋空情形，價格支撐力主要來自內資基本面買盤。
+                </p>
+
+                <div class="grid md:grid-cols-2 gap-8 items-center mb-6">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-700 mb-3 text-center">法人與散戶籌碼結構佔比 (%)</h3>
+                        <div class="chart-container">
+                            <canvas id="chipBarChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Chip details list -->
+                    <div class="space-y-3">
+                        <div class="p-3.5 bg-slate-50 rounded border border-slate-200 text-xs">
+                            <span class="font-bold text-slate-800 block mb-1">外資動向 (Foreign Institutional Investors)</span>
+                            <p class="text-slate-600">持股比率約 <strong class="text-slate-900">11.92% (17,366 張)</strong>。股價衝高逾 500 元後，外資短線呈現逢高波段獲利了結，滾動調整持倉。</p>
+                        </div>
+                        <div class="p-3.5 bg-slate-50 rounded border border-slate-200 text-xs">
+                            <span class="font-bold text-slate-800 block mb-1">投信動向 (Investment Trust Funds)</span>
+                            <p class="text-slate-600">持股比率約 <strong class="text-slate-900">7.42% (10,813 張)</strong>。本土核心機構法人偏多佈局，逢回震盪時逆勢加碼承接，提供強固下檔支撐。</p>
+                        </div>
+                        <div class="p-3.5 bg-slate-50 rounded border border-slate-200 text-xs">
+                            <span class="font-bold text-slate-800 block mb-1">融資與信用籌碼 (Margin Balance)</span>
+                            <p class="text-slate-600">融資餘額 16,218 張 (佔股本 <strong class="text-slate-900">11.13%</strong>)，融券極低 (0.12%)。信用槓桿溫和，散戶籌碼沉澱相對乾淨。</p>
+                        </div>
+                        <div class="p-3.5 bg-amber-50 rounded border border-amber-200 text-xs">
+                            <span class="font-bold text-amber-900 block mb-1">資本擴張：30億元可轉換公司債 (CB) 發行</span>
+                            <p class="text-amber-800">董事會於 2026 年 8 月決議發行 NT$30 億 CB，主要用於採購 800G 與 1.6T 高階擴產設備，短線需留心轉換後潛在股本稀釋效應。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 5: SIPH & CPO TECHNOLOGY -->
+        <section id="sec-siph" class="space-y-6 hidden">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <h2 class="text-lg font-bold text-brand-800 mb-2 border-l-4 border-brand-500 pl-3">矽光子 (SiPh) / CPO 架構與全光路專利壁壘</h2>
+                <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                    子公司的源傑科技（7917）掌握貫穿矽光子「整條光路五大環節」之專利護城河。聯鈞同時加入台積電主導之矽光子產業聯盟，專責後段外部雷射光源模組 (ELSFP) 高階封測。
+                </p>
+
+                <!-- Patent Table -->
+                <div class="overflow-x-auto mb-6">
+                    <table class="w-full text-xs text-left text-slate-600 border border-slate-200 rounded-lg">
+                        <thead class="text-xs text-slate-700 uppercase bg-slate-100 border-b border-slate-200">
+                            <tr>
+                                <th class="px-4 py-3">光路關鍵環節</th>
+                                <th class="px-4 py-3">技術創新與架構優勢</th>
+                                <th class="px-4 py-3">代表專利證號 (US / TW)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200">
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-4 py-3 font-bold text-brand-700">1. 光源整合</td>
+                                <td class="px-4 py-3">高數值孔徑 (NA ≥ 0.5) 波導，實現免透鏡 (Lensless) 雷射晶片直接對接耦合。</td>
+                                <td class="px-4 py-3 font-mono">美國 US9729243</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-4 py-3 font-bold text-brand-700">2. 波分複用波導</td>
+                                <td class="px-4 py-3">結合陣列波導光柵 (AWG) 進行多波長合波，立體排線避免光路交叉衰減。</td>
+                                <td class="px-4 py-3 font-mono">美國 US10890718 / 台灣 TWI706177B</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-4 py-3 font-bold text-brand-700">3. 調變與光感測</td>
+                                <td class="px-4 py-3">將有機矽光子 (SOH) 調變器、光電二極體與驅動放大線路單晶整合，奠定 CPO 核心。</td>
+                                <td class="px-4 py-3 font-mono">台灣 TWI897547B / 美國審查中 US20260029672</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-4 py-3 font-bold text-brand-700">4. 晶圓級封裝</td>
+                                <td class="px-4 py-3">光電混合晶圓級封裝製程與應力匹配基板設計，提升模組散熱結構穩定性。</td>
+                                <td class="px-4 py-3 font-mono">美國 US8580589B1 / 台灣 TWI433323B</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-4 py-3 font-bold text-brand-700">5. 光纖陣列耦合</td>
+                                <td class="px-4 py-3">高精密度對準結構之光電連接器與可拆卸式封裝機構，便利組裝與維護。</td>
+                                <td class="px-4 py-3 font-mono">美國 US10234643 / 台灣 TWI443782B</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ELSFP Info Box -->
+                <div class="bg-brand-50/60 p-4 rounded-lg border border-brand-200 text-xs space-y-2">
+                    <h4 class="font-bold text-brand-900 text-sm">外部雷射光源模組 (ELSFP) 突破高溫熱極限</h4>
+                    <p class="text-slate-700 leading-relaxed">
+                        在 CPO 架構中，雷射對高溫極度敏感，無法直接與數百瓦的 Switch ASIC 封裝在一起。業界採用 ELSFP 可熱插拔光學模組放置於伺服器面板前方。一台標準高階 CPO 交換機需約 <strong>18 顆 ELSFP 模組</strong>，每顆要求輸出功率高達 <strong>300mW (23dBm)</strong> 以上。聯鈞此 ELSFP 預期於 2026 年底至 2027 年正式進入量產。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 6: RISK & VALUATION SCENARIO SIMULATOR -->
+        <section id="sec-simulator" class="space-y-6 hidden">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <h2 class="text-lg font-bold text-brand-800 mb-2 border-l-4 border-brand-500 pl-3">動態情境模擬器 (Scenario Calculators & Sensitivity)</h2>
+                <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                    提供三個互動式試算器：協助投資人定量評估 CPO 複合良率衰減數學效應、目標價估值敏感度以及母公司實質 EPS 稀釋扣除。
+                </p>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Calculator 1: Dynamic Target Price Sensitivity -->
+                    <div class="bg-slate-50 p-5 rounded-lg border border-slate-200 space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                            <h3 class="font-bold text-slate-800 text-sm">1. 目標價估值與本益比動態試算</h3>
+                            <span class="text-xs bg-brand-100 text-brand-800 px-2 py-0.5 rounded font-mono">P/E Model</span>
+                        </div>
+
+                        <div class="space-y-3 text-xs">
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <label class="font-medium text-slate-700">預估全年 EPS (元):</label>
+                                    <span id="valEpsText" class="font-bold text-brand-600">NT$ 9.0 元</span>
+                                </div>
+                                <input type="range" id="inputEps" min="4.0" max="15.0" step="0.5" value="9.0" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-600" oninput="updateValuationSim()">
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <label class="font-medium text-slate-700">給予目標本益比 (P/E Ratio):</label>
+                                    <span id="valPeText" class="font-bold text-brand-600">65 倍</span>
+                                </div>
+                                <input type="range" id="inputPe" min="20" max="110" step="5" value="65" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-600" oninput="updateValuationSim()">
+                            </div>
+
+                            <div class="p-4 bg-white rounded border border-slate-200 text-center space-y-1">
+                                <span class="text-xs text-slate-500 block">模擬隱含目標價 (Target Price)</span>
+                                <span id="simTargetPrice" class="text-2xl font-black text-brand-700">NT$ 585 元</span>
+                                <p id="simRemark" class="text-xs text-slate-400 mt-1">反映 2026 全年高爆發力定價模型</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Calculator 2: CPO Compound Yield Degradation -->
+                    <div class="bg-slate-50 p-5 rounded-lg border border-slate-200 space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                            <h3 class="font-bold text-slate-800 text-sm">2. CPO 複合良率損耗計算機</h3>
+                            <span class="text-xs bg-rose-100 text-rose-800 px-2 py-0.5 rounded font-mono">Yield = Y^N</span>
+                        </div>
+
+                        <div class="space-y-3 text-xs">
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <label class="font-medium text-slate-700">單顆微型光引擎良率 (Single Engine Yield):</label>
+                                    <span id="valSingleYieldText" class="font-bold text-rose-600">95 %</span>
+                                </div>
+                                <input type="range" id="inputSingleYield" min="85" max="99" step="1" value="95" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-rose-600" oninput="updateYieldSim()">
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <label class="font-medium text-slate-700">CPO 交換器內整合光引擎數量 (Engines):</label>
+                                    <span id="valEnginesText" class="font-bold text-rose-600">32 顆</span>
+                                </div>
+                                <input type="range" id="inputEngines" min="8" max="64" step="8" value="32" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-rose-600" oninput="updateYieldSim()">
+                            </div>
+
+                            <div class="p-4 bg-white rounded border border-slate-200 text-center space-y-1">
+                                <span class="text-xs text-slate-500 block">整體 CPO 模組最終複合良率 (Final Yield)</span>
+                                <span id="simFinalYield" class="text-2xl font-black text-rose-600">19.37 %</span>
+                                <p class="text-xs text-rose-500 mt-1">⚠️ 顯示高溫封裝不可逆修復下的驚人報廢率與商轉風險</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calculator 3: Parent Equity Net Profit Dilution -->
+                <div class="mt-6 bg-slate-50 p-5 rounded-lg border border-slate-200 space-y-3">
+                    <h3 class="font-bold text-slate-800 text-sm border-b border-slate-200 pb-2">3. 合併淨利與母公司股東淨利折算器 (非控制權益影響)</h3>
+                    <div class="grid md:grid-cols-3 gap-4 text-xs items-center">
+                        <div>
+                            <label class="block text-slate-600 mb-1">假設集團合併總淨利 (億元):</label>
+                            <input type="number" id="inputConsolidatedNet" value="10.0" step="0.5" class="w-full p-2 border border-slate-300 rounded focus:ring-1 focus:ring-brand-500 outline-none font-bold" oninput="updateDilutionSim()">
+                        </div>
+                        <div>
+                            <label class="block text-slate-600 mb-1">估計非控制權益分潤比例 (%):</label>
+                            <input type="number" id="inputMinorityRatio" value="39.0" step="1.0" class="w-full p-2 border border-slate-300 rounded focus:ring-1 focus:ring-brand-500 outline-none font-bold" oninput="updateDilutionSim()">
+                        </div>
+                        <div class="bg-white p-3 rounded border border-slate-200 text-center">
+                            <span class="text-slate-500 text-xs block">歸屬母公司股東實質淨利</span>
+                            <span id="simParentNet" class="text-lg font-bold text-emerald-600">NT$ 6.10 億元</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-auto py-6">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 space-y-1">
+            <p>本報告僅供投資研究與教學互動用途，不構成任何投資買賣推薦。投資有風險，請謹慎獨立評估。</p>
+            <p>資料來源：公開資訊觀測站、公司法說會簡報、智慧財產局專利資料庫、研究報告彙整。</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Tab switching logic
+        function switchTab(tabId) {
+            const sections = ['verdict', 'business', 'financials', 'chips', 'siph', 'simulator'];
+            sections.forEach(sec => {
+                document.getElementById('sec-' + sec).classList.add('hidden');
+                document.getElementById('tab-' + sec).classList.remove('active');
+            });
+            document.getElementById('sec-' + tabId).classList.remove('hidden');
+            document.getElementById('tab-' + tabId).classList.add('active');
+        }
+
+        // Initialize Chart.js visual elements
+        document.addEventListener("DOMContentLoaded", function() {
+            // 1. Revenue Segment Donut Chart
+            const ctxPie = document.getElementById('revenuePieChart').getContext('2d');
+            new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: ['AI 高階光學/矽光子 (聯鈞/源傑)', '捷敏-KY 功率半導體', '傳統消費/FTTH光學'],
+                    datasets: [{
+                        data: [45.5, 50.4, 4.1],
+                        backgroundColor: ['#0284c7', '#d97706', '#94a3b8'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 12, font: { size: 11 } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + context.label + ': ' + context.raw + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 2. Financial Multi-Year Combo Chart
+            const ctxFin = document.getElementById('financialChart').getContext('2d');
+            new Chart(ctxFin, {
+                type: 'bar',
+                data: {
+                    labels: ['2024全年', '2025全年', '2026 Q1', '2026 Q2'],
+                    datasets: [
+                        {
+                            type: 'bar',
+                            label: '合併營收 (億元)',
+                            data: [70.83, 85.85, 20.87, 29.77],
+                            backgroundColor: 'rgba(2, 132, 199, 0.75)',
+                            yAxisID: 'y'
+                        },
+                        {
+                            type: 'line',
+                            label: '毛利率 (%)',
+                            data: [27.0, 31.0, 26.0, 31.54],
+                            borderColor: '#059669',
+                            backgroundColor: '#059669',
+                            borderWidth: 2.5,
+                            tension: 0.2,
+                            yAxisID: 'y1'
+                        },
+                        {
+                            type: 'line',
+                            label: '營業利益率 (%)',
+                            data: [15.0, 20.0, 14.0, 21.21],
+                            borderColor: '#d97706',
+                            backgroundColor: '#d97706',
+                            borderWidth: 2.5,
+                            tension: 0.2,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: '億元' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            title: { display: true, text: '%' }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+                    }
+                }
+            });
+
+            // 3. Chip Ownership Chart
+            const ctxChip = document.getElementById('chipBarChart').getContext('2d');
+            new Chart(ctxChip, {
+                type: 'bar',
+                data: {
+                    labels: ['外資持股', '融資餘額', '董監事持股', '本土投信'],
+                    datasets: [{
+                        label: '持股比率 (%)',
+                        data: [11.92, 11.13, 7.96, 7.42],
+                        backgroundColor: ['#0369a1', '#cbd5e1', '#475569', '#059669'],
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) { return ' 持股比例: ' + context.raw + '%'; }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { max: 20, title: { display: true, text: '%' } }
+                    }
+                }
+            });
+        });
+
+        // Interactive Simulator 1: Dynamic Target Price Sensitivity
+        function updateValuationSim() {
+            const eps = parseFloat(document.getElementById('inputEps').value);
+            const pe = parseFloat(document.getElementById('inputPe').value);
+
+            document.getElementById('valEpsText').innerText = 'NT$ ' + eps.toFixed(1) + ' 元';
+            document.getElementById('valPeText').innerText = pe + ' 倍';
+
+            const targetPrice = Math.round(eps * pe);
+            document.getElementById('simTargetPrice').innerText = 'NT$ ' + targetPrice + ' 元';
+
+            const remark = document.getElementById('simRemark');
+            if (pe >= 90) {
+                remark.innerText = '⚠️ 極度樂觀估值模型（透支遠期雙倍成長）';
+                remark.className = 'text-xs text-rose-500 mt-1';
+            } else if (pe <= 35) {
+                remark.innerText = '保守修復模型';
+                remark.className = 'text-xs text-slate-400 mt-1';
+            } else {
+                remark.innerText = '合理 AI 高高速成長溢價區間';
+                remark.className = 'text-xs text-emerald-600 mt-1';
+            }
+        }
+
+        // Interactive Simulator 2: CPO Compound Yield Degradation
+        function updateYieldSim() {
+            const singleYieldPct = parseFloat(document.getElementById('inputSingleYield').value);
+            const engines = parseInt(document.getElementById('inputEngines').value);
+
+            document.getElementById('valSingleYieldText').innerText = singleYieldPct + ' %';
+            document.getElementById('valEnginesText').innerText = engines + ' 顆';
+
+            const p = singleYieldPct / 100.0;
+            const finalYield = Math.pow(p, engines) * 100.0;
+
+            document.getElementById('simFinalYield').innerText = finalYield.toFixed(2) + ' %';
+        }
+
+        // Interactive Simulator 3: Dilution Calculator
+        function updateDilutionSim() {
+            const consNet = parseFloat(document.getElementById('inputConsolidatedNet').value) || 0;
+            const minRatio = parseFloat(document.getElementById('inputMinorityRatio').value) || 0;
+
+            const parentNet = consNet * (1 - (minRatio / 100.0));
+            document.getElementById('simParentNet').innerText = 'NT$ ' + parentNet.toFixed(2) + ' 億元';
+        }
+    </script>
+</body>
+</html>
