@@ -43,11 +43,7 @@ def generate():
     # 5. 組裝 <li> 連結
     list_items = ""
     for file in files:
-<<<<<<< HEAD
         list_items += f'        <li><a href="{TARGET_DIR}/{file}">{file}</a></li>\n'
-=======
-        list_items += f'        <li><a href="{file}">{file}</a></li>\n'
->>>>>>> f4d6e17f9fa9299cc8a8561f169302ff9e31c693
         
     # 如果完全沒有檔案，給個提示
     if not files:
