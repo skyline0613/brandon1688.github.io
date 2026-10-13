@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>尖點科技 (8021) 深度研究與財務籌碼分析 Dashboard</title>
+    <!-- Chosen Palette: Warm Neutral & Amber Slate -->
+    <!-- Application Structure Plan: Designed as a 6-tab interactive financial intelligence report SPA, featuring executive KPI highlight cards, dynamic financial chart toggles, interactive EPS/Valuation target price calculator, interactive supply-demand deficit model, and structured Porter's 5 forces cards. This allows investors to seamlessly switch between operational metrics, financial projections, ownership structures, and scenario valuations. -->
+    <!-- Visualization & Content Choices: Financial performance trends -> Interactive Line/Bar combo (Chart.js); Global Supply/Demand Deficit -> Grouped Bar chart (Chart.js); Valuation Scenario -> Interactive JS range sliders recalculating target price; Porter's 5 Forces -> Interactive CSS Grid cards with state toggle. NO SVG graphics or Mermaid JS used; all graphics use Canvas or styled CSS/Unicode. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 380px;
+            }
+        }
+        .tab-btn.active {
+            border-bottom-color: #d97706;
+            color: #d97706;
+            font-weight: 600;
+            background-color: #fef3c7;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+    <!-- Header Section -->
+    <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col md:flex-row justify-between items-center gap-3">
+            <div class="flex items-center space-x-3">
+                <span class="bg-amber-500 text-slate-950 font-black px-2.5 py-1 rounded text-lg">8021</span>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight">尖點科技 Topoint</h1>
+                    <p class="text-xs text-slate-400">AI 伺服器與高階載板鍍膜微針龍頭 | 深度個股研究 Dashboard</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4 text-xs sm:text-sm">
+                <div class="text-right">
+                    <span class="text-slate-400 block">當前估算市價</span>
+                    <span class="text-lg font-bold text-amber-400">NT$ 556.0</span>
+                </div>
+                <div class="h-8 w-px bg-slate-700"></div>
+                <div class="text-right">
+                    <span class="text-slate-400 block">12M 預期目標價</span>
+                    <span class="text-lg font-bold text-emerald-400">NT$ 620.0</span>
+                </div>
+                <div class="h-8 w-px bg-slate-700"></div>
+                <div class="bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-lg text-sm shadow">
+                    評級: 買入 (BUY)
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="bg-white border-b border-slate-200 sticky top-[61px] z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex space-x-1 sm:space-x-4 overflow-x-auto custom-scrollbar text-sm font-medium py-2">
+                <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn active px-3 py-2 rounded-md whitespace-nowrap transition-colors">
+                    🏛️ 業務護城河 & 五力
+                </button>
+                <button onclick="switchTab('financials')" id="tab-financials" class="tab-btn px-3 py-2 rounded-md whitespace-nowrap transition-colors">
+                    📊 財務深度透視
+                </button>
+                <button onclick="switchTab('valuation')" id="tab-valuation" class="tab-btn px-3 py-2 rounded-md whitespace-nowrap transition-colors">
+                    ⚖️ 估值模型 & 試算
+                </button>
+                <button onclick="switchTab('chips')" id="tab-chips" class="tab-btn px-3 py-2 rounded-md whitespace-nowrap transition-colors">
+                    🔍 籌碼與股權結構
+                </button>
+                <button onclick="switchTab('risks')" id="tab-risks" class="tab-btn px-3 py-2 rounded-md whitespace-nowrap transition-colors">
+                    ⚠️ 風險評估 & 供需
+                </button>
+                <button onclick="switchTab('verdict')" id="tab-verdict" class="tab-btn px-3 py-2 rounded-md whitespace-nowrap transition-colors">
+                    🎯 投資評級與總結
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Executive Summary Snapshot Strip -->
+        <section class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+                <span class="text-xs font-semibold text-slate-500 block">營收雙軸結構</span>
+                <span class="text-sm font-bold text-slate-800">刀具67% / 代鑽33%</span>
+                <span class="text-[11px] text-slate-400 block mt-1">縱向整合與實證測試</span>
+            </div>
+            <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+                <span class="text-xs font-semibold text-slate-500 block">2026 Q2 毛利率</span>
+                <span class="text-base font-bold text-emerald-600">41.78% (歷史新高)</span>
+                <span class="text-[11px] text-emerald-500 block mt-1">鍍膜針占比超 56%</span>
+            </div>
+            <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+                <span class="text-xs font-semibold text-slate-500 block">2026 前三季營收</span>
+                <span class="text-base font-bold text-amber-600">54.96 億 (+79.1%)</span>
+                <span class="text-[11px] text-slate-400 block mt-1">已超歷年任一全年</span>
+            </div>
+            <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+                <span class="text-xs font-semibold text-slate-500 block">2027E EPS 預估</span>
+                <span class="text-base font-bold text-indigo-600">NT$ 28.94</span>
+                <span class="text-[11px] text-slate-400 block mt-1">法人研究重估中樞</span>
+            </div>
+            <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+                <span class="text-xs font-semibold text-slate-500 block">全球鑽針市占率</span>
+                <span class="text-base font-bold text-slate-800">9.0% ~ 9.9%</span>
+                <span class="text-[11px] text-slate-400 block mt-1">全球第四大 / 高階微針前二</span>
+            </div>
+            <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+                <span class="text-xs font-semibold text-slate-500 block">策略股權夥伴</span>
+                <span class="text-sm font-bold text-slate-800">欣興 & 臻鼎-KY</span>
+                <span class="text-[11px] text-emerald-600 block mt-1">認購逾4億元私募債</span>
+            </div>
+        </section>
+
+        <!-- SECTION 1: BUSINESS OVERVIEW & PORTER'S 5 FORCES -->
+        <section id="sec-overview" class="tab-content space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <h2 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3 mb-4 flex items-center">
+                    <span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-xs mr-2">核心業務</span>
+                    一句話看懂尖點科技：靠什麼賺錢？
+                </h2>
+                <p class="text-slate-700 leading-relaxed text-sm sm:text-base">
+                    尖點科技（8021）為全球第四大 PCB 微型鑽針製造商，核心商業模式為<strong class="text-slate-900">「高階鍍膜微型刀具銷售（67%）」與「PCB 專業代鑽孔服務（33%）」雙軌整合</strong>。刀具端提供高毛利自製耗材，代工端則作為研發測試平台反饋實際切削數據，並直接對接 AI 伺服器主板（GB200/Rubin Ultra）與 ABF/BT 高階載板之高長徑比微孔成型需求。
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <h3 class="font-bold text-slate-800 text-sm mb-2">地理營收區域分布</h3>
+                        <ul class="text-xs text-slate-600 space-y-1">
+                            <li class="flex justify-between"><span>中國大陸市場</span> <span class="font-semibold text-slate-800">58%</span></li>
+                            <li class="flex justify-between"><span>台灣市場</span> <span class="font-semibold text-slate-800">37%</span></li>
+                            <li class="flex justify-between"><span>日本/韓國/東南亞/歐美</span> <span class="font-semibold text-slate-800">5%</span></li>
+                        </ul>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <h3 class="font-bold text-slate-800 text-sm mb-2">終端高階應用場景</h3>
+                        <p class="text-xs text-slate-600">
+                            AI 伺服器運算板 (UBB/OAM)、800G/1.6T 高速交換機板、ABF/BT 載板、高多層板 (HLC, 30-78層) 及 Any-layer HDI 任意層高密度互連板。
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Porter's Five Forces Analysis -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <h2 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3 mb-4">
+                    🛡️ 競爭優勢與波特五力模型 (Porter’s 5 Forces)
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="p-4 rounded-xl border border-slate-200 bg-amber-50/50">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-bold text-sm text-slate-800">1. 供應商議價能力</span>
+                            <span class="text-xs bg-amber-200 text-amber-800 font-bold px-2 py-0.5 rounded">中~高</span>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            原材料為超細晶粒碳化鎢棒材與金屬鈷，價格易受地緣政治與配額影響。但尖點具備成本轉嫁機制 (Cost-plus)。
+                        </p>
+                    </div>
+                    <div class="p-4 rounded-xl border border-slate-200 bg-emerald-50/50">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-bold text-sm text-slate-800">2. 買方議價能力</span>
+                            <span class="text-xs bg-emerald-200 text-emerald-800 font-bold px-2 py-0.5 rounded">低</span>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            高階 AI 伺服器板（M8/M9石英布）引發高階鍍膜針嚴重短缺，客戶嚴禁重磨再用，尖點具備產品溢價與定價主導權。
+                        </p>
+                    </div>
+                    <div class="p-4 rounded-xl border border-slate-200 bg-emerald-50/50">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-bold text-sm text-slate-800">3. 潛在進入者威脅</span>
+                            <span class="text-xs bg-emerald-200 text-emerald-800 font-bold px-2 py-0.5 rounded">極低</span>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            瑞士/日本超精密數控開槽機床交期長達 1~2 年，加上 PVD 鍍膜與高長徑比技術門檻，新進者難以短期突破。
+                        </p>
+                    </div>
+                    <div class="p-4 rounded-xl border border-slate-200 bg-emerald-50/50">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-bold text-sm text-slate-800">4. 替代品威脅</span>
+                            <span class="text-xs bg-emerald-200 text-emerald-800 font-bold px-2 py-0.5 rounded">極低</span>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            高多層板及厚板實體貫穿孔仍以機械鑽孔為主，雷射鑽孔深寬比受限無法完全替代高長徑比金屬鑽針。
+                        </p>
+                    </div>
+                    <div class="p-4 rounded-xl border border-slate-200 bg-amber-50/50 col-span-1 md:col-span-2">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-bold text-sm text-slate-800">5. 現有競爭者敵對強度</span>
+                            <span class="text-xs bg-amber-200 text-amber-800 font-bold px-2 py-0.5 rounded">中等 (高階寡占)</span>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            全球前四大掌控近七成市場。鼎泰高科 (29%) 與金洲精工 (21%) 偏重規模，日本佑能 (12%) 與尖點 (9.5%) 則掌控 0.25mm 以下極微針與高長徑比鍍膜針的高階市場話語權。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: FINANCIAL DEEP-DIVE -->
+        <section id="sec-financials" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-100 pb-3 mb-4 gap-2">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900">📈 財務趨勢與獲利結構躍升 (近3年與預估)</h2>
+                        <p class="text-xs text-slate-500">顯示 2024 至 2026 年產品組合高階化帶來的毛利率與營收跳躍</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Chart container -->
+                    <div class="lg:col-span-2 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <div class="chart-container">
+                            <canvas id="financialChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Metrics Breakdown -->
+                    <div class="space-y-3 flex flex-col justify-center">
+                        <div class="p-3 bg-amber-50/80 rounded-lg border border-amber-200">
+                            <span class="text-xs font-semibold text-amber-800">毛利率突破 41% 關鍵驅動</span>
+                            <p class="text-xs text-slate-700 mt-1">
+                                高附加價值之高長徑比鍍膜鑽針出貨占比由 2024 年的 32% 迅速跳升至 2026Q2 的 56%，帶動整體 ASP 與毛利率雙升。
+                            </p>
+                        </div>
+                        <div class="p-3 bg-slate-100 rounded-lg border border-slate-200">
+                            <span class="text-xs font-semibold text-slate-700">現金流轉正與配息率</span>
+                            <p class="text-xs text-slate-600 mt-1">
+                                2025 年營運現金流入 6.77 億元 (+255%)，FCF 轉正至 2.74 億元。公司維持 70%+ 高配息率政策 (2025配 2.0 元)。
+                            </p>
+                        </div>
+                        <div class="p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+                            <span class="text-xs font-semibold text-indigo-900">資本支出擴張 (CapEx)</span>
+                            <p class="text-xs text-slate-700 mt-1">
+                                2026 資本支出躍升至 21 億元 (含購置中壢廠 5.6 億)，全年折舊預估增加至 4.30 億元。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financial Table -->
+                <div class="mt-6 overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left text-xs text-slate-700 border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-800 font-bold border-b border-slate-200">
+                                <th class="p-2.5">財務指標 / 期間</th>
+                                <th class="p-2.5">2024 年全</th>
+                                <th class="p-2.5">2025 年全</th>
+                                <th class="p-2.5">2025 Q4</th>
+                                <th class="p-2.5">2026 Q1</th>
+                                <th class="p-2.5">2026 Q2</th>
+                                <th class="p-2.5">2026 Q3</th>
+                                <th class="p-2.5 bg-amber-50">2027E (法人預估)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200">
+                            <tr>
+                                <td class="p-2.5 font-semibold">合併營收 (億元)</td>
+                                <td class="p-2.5">35.10</td>
+                                <td class="p-2.5">44.10</td>
+                                <td class="p-2.5">13.41</td>
+                                <td class="p-2.5">13.40</td>
+                                <td class="p-2.5">18.26</td>
+                                <td class="p-2.5">23.31</td>
+                                <td class="p-2.5 font-bold text-amber-700 bg-amber-50/50">199.86</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2.5 font-semibold">營收年增率 (YoY)</td>
+                                <td class="p-2.5 text-slate-400">--</td>
+                                <td class="p-2.5 text-emerald-600">+24.5%</td>
+                                <td class="p-2.5 text-emerald-600">+40.8%</td>
+                                <td class="p-2.5 text-emerald-600">+51.0%</td>
+                                <td class="p-2.5 text-emerald-600">+80.3%</td>
+                                <td class="p-2.5 text-emerald-600">+99.4%</td>
+                                <td class="p-2.5 font-bold text-emerald-600 bg-amber-50/50">+137.5%</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2.5 font-semibold">毛利率 (%)</td>
+                                <td class="p-2.5">26.20%</td>
+                                <td class="p-2.5">30.90%</td>
+                                <td class="p-2.5">34.80%</td>
+                                <td class="p-2.5">36.60%</td>
+                                <td class="p-2.5 font-bold text-emerald-600">41.78%</td>
+                                <td class="p-2.5 text-slate-400">未公布</td>
+                                <td class="p-2.5 font-bold text-amber-700 bg-amber-50/50">>45.0%</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2.5 font-semibold">營業利益率 (%)</td>
+                                <td class="p-2.5">7.90%</td>
+                                <td class="p-2.5">14.90%</td>
+                                <td class="p-2.5">19.24%</td>
+                                <td class="p-2.5">20.10%</td>
+                                <td class="p-2.5 font-bold text-emerald-600">~22.50%</td>
+                                <td class="p-2.5 text-slate-400">未公布</td>
+                                <td class="p-2.5 font-bold text-amber-700 bg-amber-50/50">~28.0%</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2.5 font-semibold">每股盈餘 EPS (元)</td>
+                                <td class="p-2.5">1.45</td>
+                                <td class="p-2.5">2.75</td>
+                                <td class="p-2.5">1.06</td>
+                                <td class="p-2.5">1.17</td>
+                                <td class="p-2.5">2.08</td>
+                                <td class="p-2.5 text-slate-400">未公布</td>
+                                <td class="p-2.5 font-bold text-amber-700 bg-amber-50/50">28.94</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: VALUATION & TARGET PRICE CALCULATOR -->
+        <section id="sec-valuation" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <h2 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3 mb-4">
+                    ⚖️ 市場估值模型與目標價互動試算 (Valuation Model)
+                </h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Dynamic Interactive Calculator -->
+                    <div class="bg-slate-900 text-white p-6 rounded-2xl shadow-md">
+                        <h3 class="text-base font-bold text-amber-400 mb-1">🧮 2027E 估值目標價動態試算器</h3>
+                        <p class="text-xs text-slate-400 mb-6">請拉動下方滑桿調整預估 EPS 與給予之本益比 (P/E Multiple)：</p>
+
+                        <div class="space-y-5">
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span class="text-slate-300">預估 2027E 全年 EPS:</span>
+                                    <span id="eps-val" class="font-bold text-amber-400 text-sm">NT$ 28.94</span>
+                                </div>
+                                <input type="range" id="eps-slider" min="15.0" max="35.0" step="0.5" value="28.94" 
+                                    class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                                    oninput="calculateTargetPrice()">
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span class="text-slate-300">給予前瞻本益比 (P/E Multiple):</span>
+                                    <span id="pe-val" class="font-bold text-amber-400 text-sm">21.5 x</span>
+                                </div>
+                                <input type="range" id="pe-slider" min="12.0" max="30.0" step="0.5" value="21.5" 
+                                    class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                                    oninput="calculateTargetPrice()">
+                            </div>
+
+                            <div class="pt-4 border-t border-slate-800 grid grid-cols-2 gap-4 text-center">
+                                <div class="bg-slate-800/80 p-3 rounded-xl">
+                                    <span class="text-xs text-slate-400 block">計算估算目標價</span>
+                                    <span id="target-price-result" class="text-2xl font-black text-emerald-400">NT$ 622.2</span>
+                                </div>
+                                <div class="bg-slate-800/80 p-3 rounded-xl">
+                                    <span class="text-xs text-slate-400 block">對比當前市價潛在空間</span>
+                                    <span id="upside-result" class="text-xl font-bold text-amber-400">+11.9%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Valuation Benchmark Explanation -->
+                    <div class="space-y-4 text-slate-700 text-xs sm:text-sm">
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <h4 class="font-bold text-slate-900 text-sm mb-1">本益比評價重估 (P/E Re-rating) 邏輯</h4>
+                            <p class="text-slate-600 leading-relaxed">
+                                尖點過去 5 年歷史本益比區間多位於 15~22 倍。然隨 AI 伺服器 (M8/M9 板材) 帶動單孔耗針量呈現 5 倍以上爆發，且競爭門檻大幅提升，法人機構已將評價模式由傳統「成熟耗材廠」調升為「高科技戰略物資供應商」，目標本益比上修至 20~25 倍。
+                            </p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <h4 class="font-bold text-slate-900 text-sm mb-1">情境分析 (Scenario Analysis)</h4>
+                            <ul class="space-y-2 text-xs">
+                                <li class="flex justify-between border-b border-slate-200 pb-1">
+                                    <span class="font-semibold text-emerald-700">牛市情境 (Bull Case):</span>
+                                    <span>2027 EPS $32.0 × P/E 23x = <strong>NT$ 736</strong></span>
+                                </li>
+                                <li class="flex justify-between border-b border-slate-200 pb-1">
+                                    <span class="font-semibold text-slate-800">基準情境 (Base Case):</span>
+                                    <span>2027 EPS $28.94 × P/E 21.5x = <strong>NT$ 622</strong></span>
+                                </li>
+                                <li class="flex justify-between">
+                                    <span class="font-semibold text-rose-700">熊市情境 (Bear Case):</span>
+                                    <span>2027 EPS $20.0 × P/E 16x = <strong>NT$ 320</strong></span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: CHIP FLOW & OWNERSHIP -->
+        <section id="sec-chips" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <h2 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3 mb-4">
+                    🔍 籌碼動向與資金結構解析 (Chip Flow)
+                </h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3">
+                        <h3 class="font-bold text-slate-800 text-sm border-b border-slate-200 pb-2">1. 法人籌碼與機構態度</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            <strong>外資與投信：</strong>隨營收連續多月刷新單月歷史新高，三大法人持股呈現持續性淨增持。投信重點鎖定其在 2026-2027 年供需缺口擴大下的獲利爆發力；外資則隨產業重估 (Re-rating) 評級調升進行加碼。
+                        </p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3">
+                        <h3 class="font-bold text-slate-800 text-sm border-b border-slate-200 pb-2">2. 私募策略夥伴與大戶鎖籌</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            <strong>欣興 (3037) & 臻鼎-KY (4958)：</strong>2026 年發行上限 6 億元第二次私募可轉換公司債，認購逾 4 億元，將晶片載板與 PCB 兩大龍頭實質綁定。400張/1000張以上大戶持股比例高度集中，籌碼流向穩定手。
+                        </p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3">
+                        <h3 class="font-bold text-slate-800 text-sm border-b border-slate-200 pb-2">3. 籌碼集中度與沉澱狀態</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            <strong>籌碼狀態：沉澱。</strong>主力分點買賣超集中度高，散戶融資券餘額維持健康比例，無過度槓桿發散跡象。中壢新廠產能已優先對接夥伴長期訂單，籌碼結構具備堅實護城河。
+                        </p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3">
+                        <h3 class="font-bold text-slate-800 text-sm border-b border-slate-200 pb-2">4. 資本結構與融資工具</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            先前透過現金增資 (每股 127 元) 與 8.06 億元無擔保 CB 籌得約 11.87 億元，搭配私募案，資產負債表現金充裕，能有效支應 2026 年高達 21 億元的資本支出擴張。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 5: RISKS & SUPPLY-DEMAND DEFICIT MODEL -->
+        <section id="sec-risks" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <h2 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3 mb-4">
+                    ⚠️ 全球供需模型與潛在紅旗風險 (Supply-Demand & Risks)
+                </h2>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Supply-Demand Chart -->
+                    <div class="lg:col-span-2 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <h3 class="font-bold text-slate-800 text-sm mb-2">全球高階鑽針供需缺口預測 (億支)</h3>
+                        <div class="chart-container">
+                            <canvas id="supplyDemandChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Risk Checklist -->
+                    <div class="space-y-3">
+                        <h3 class="font-bold text-slate-800 text-sm">關鍵營運紅旗警訊風險</h3>
+                        <div class="p-3 bg-rose-50 border border-rose-200 rounded-lg">
+                            <span class="text-xs font-bold text-rose-800 block">1. 瑞士/日本開槽機床交期延誤</span>
+                            <p class="text-xs text-slate-600 mt-1">
+                                超精密開槽機交期長達 1-2 年。若核心設備交期遞延，將直接影響 2026 年底 4,500 萬支/月及中壢新廠的擴產進度。
+                            </p>
+                        </div>
+                        <div class="p-3 bg-rose-50 border border-rose-200 rounded-lg">
+                            <span class="text-xs font-bold text-rose-800 block">2. 同業高階良率超預期與擴產</span>
+                            <p class="text-xs text-slate-600 mt-1">
+                                鼎泰高科具備自研機床能力，日本佑能長岡第六廠預計 2027 中投產。若同業高階突破加速，缺口收斂可能壓抑產品溢價。
+                            </p>
+                        </div>
+                        <div class="p-3 bg-rose-50 border border-rose-200 rounded-lg">
+                            <span class="text-xs font-bold text-rose-800 block">3. 原料成本與高額折舊壓力</span>
+                            <p class="text-xs text-slate-600 mt-1">
+                                碳化鎢價格飆漲若無法及時完全轉嫁，加上 2026 年起每年 4.3 億元以上的固定資產折舊，若終端拉貨出現短暫波動，將對營業利益率產生逆向槓桿。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 6: VERDICT & SUMMARY -->
+        <section id="sec-verdict" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="flex flex-col md:flex-row justify-between items-center bg-slate-900 text-white p-6 rounded-xl gap-4 mb-6">
+                    <div>
+                        <span class="text-xs text-amber-400 font-semibold tracking-wide uppercase">首席資深股權研究分析師 Verdict</span>
+                        <h2 class="text-2xl font-black mt-1">評級：買入 (BUY) | 12M 目標價 NT$ 620</h2>
+                        <p class="text-xs text-slate-400 mt-1">當前價格 NT$ 556.0 | 潛在隱含報酬率約 +11.5% ~ +32.4% (視2027年倍數兌現程度)</p>
+                    </div>
+                    <div class="text-right border-l md:border-l border-slate-700 pl-4">
+                        <span class="text-xs text-slate-400 block">關鍵核心驅動</span>
+                        <span class="text-sm font-bold text-emerald-400">鑽針由耗材升格為戰略物資</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- 3 Bull Cases -->
+                    <div class="bg-emerald-50/60 p-5 rounded-xl border border-emerald-200">
+                        <h3 class="font-bold text-emerald-900 text-base mb-3 flex items-center">
+                            <span class="bg-emerald-600 text-white text-xs px-2 py-0.5 rounded mr-2">看多</span>
+                            3 大買入與看多理由 (Investment Thesis)
+                        </h3>
+                        <ol class="space-y-3 text-xs text-slate-700 list-decimal list-inside">
+                            <li class="leading-relaxed">
+                                <strong class="text-slate-900">AI 伺服器與硬質板材引發單孔耗針量乘數爆發：</strong>
+                                CCL 升級至 M8/M9 與石英布，單針壽命崩跌至 100-200 孔，搭配禁止重磨規範，Rubin 世代鑽針消耗量達 GB200 的 5 倍以上，驅動毛利率跨越 41%。
+                            </li>
+                            <li class="leading-relaxed">
+                                <strong class="text-slate-900">寡占結構與高機台設備交期壁壘：</strong>
+                                全球高階微針缺口將由 2026 年的 1.11 億支擴大至 2027 年的 7.26 億支，開槽機 1-2 年交期壁壘封死新進者，尖點享有長期定價溢價。
+                            </li>
+                            <li class="leading-relaxed">
+                                <strong class="text-slate-900">策略股權綁定欣興與臻鼎：</strong>
+                                私募案深度鎖定載板與 PCB 龍頭需求，中壢新廠產能提前被訂單包攬，擴產能見度明確直達 2028 年。
+                            </li>
+                        </ol>
+                    </div>
+
+                    <!-- 3 Key Risks -->
+                    <div class="bg-rose-50/60 p-5 rounded-xl border border-rose-200">
+                        <h3 class="font-bold text-rose-900 text-base mb-3 flex items-center">
+                            <span class="bg-rose-600 text-white text-xs px-2 py-0.5 rounded mr-2">風險</span>
+                            3 大核心風險警訊 (Key Risks)
+                        </h3>
+                        <ol class="space-y-3 text-xs text-slate-700 list-decimal list-inside">
+                            <li class="leading-relaxed">
+                                <strong class="text-slate-900">歐日超精密機床進口交期延誤：</strong>
+                                若進口設備交付時間延後，將影響每月 4,500 萬支產能目標及中壢新廠效益認列時程。
+                            </li>
+                            <li class="leading-relaxed">
+                                <strong class="text-slate-900">競爭對手高階產能突破速度：</strong>
+                                鼎泰高科自研機床與佑能長岡新廠若提前開出並通過驗證，可能縮小供需缺口與溢價。
+                            </li>
+                            <li class="leading-relaxed">
+                                <strong class="text-slate-900">原材料價格飆漲與固定資產折舊槓桿：</strong>
+                                碳化鎢成本轉嫁時間差與 2026 年起每年 4.3 億元以上的固定折舊，對單季毛利率具潛在波動壓力。
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 text-xs py-6 border-t border-slate-800 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-2">
+            <p>© 2026 首席資深股權研究分析報告 - 尖點科技 (8021). 僅供研究參考，不構成直接投資買賣建議。</p>
+            <p>Data Source: 尖點科技營運分析報告 & 市場公開財務數據彙整</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Tab switching logic
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+            document.getElementById('sec-' + tabId).classList.remove('hidden');
+            document.getElementById('tab-' + tabId).classList.add('active');
+
+            // Trigger chart update/resize on tab switch
+            if (tabId === 'financials' && window.financialChartObj) {
+                window.financialChartObj.resize();
+            }
+            if (tabId === 'risks' && window.supplyDemandChartObj) {
+                window.supplyDemandChartObj.resize();
+            }
+        }
+
+        // Calculator logic
+        function calculateTargetPrice() {
+            const eps = parseFloat(document.getElementById('eps-slider').value);
+            const pe = parseFloat(document.getElementById('pe-slider').value);
+            
+            document.getElementById('eps-val').innerText = 'NT$ ' + eps.toFixed(2);
+            document.getElementById('pe-val').innerText = pe.toFixed(1) + ' x';
+
+            const targetPrice = eps * pe;
+            const currentPrice = 556.0;
+            const upside = ((targetPrice - currentPrice) / currentPrice) * 100;
+
+            document.getElementById('target-price-result').innerText = 'NT$ ' + targetPrice.toFixed(1);
+            
+            const upsideEl = document.getElementById('upside-result');
+            if (upside >= 0) {
+                upsideEl.innerText = '+' + upside.toFixed(1) + '%';
+                upsideEl.className = 'text-xl font-bold text-amber-400';
+            } else {
+                upsideEl.innerText = upside.toFixed(1) + '%';
+                upsideEl.className = 'text-xl font-bold text-rose-400';
+            }
+        }
+
+        // Initialize Charts when DOM loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            // Chart 1: Financial Performance Chart
+            const ctx1 = document.getElementById('financialChart').getContext('2d');
+            window.financialChartObj = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: ['2024全', '2025全', '2025 Q4', '2026 Q1', '2026 Q2', '2027E'],
+                    datasets: [
+                        {
+                            label: '合併營收 (億元)',
+                            data: [35.10, 44.10, 13.41, 13.40, 18.26, 199.86],
+                            backgroundColor: 'rgba(217, 119, 6, 0.7)',
+                            borderColor: '#d97706',
+                            borderWidth: 1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: '毛利率 (%)',
+                            data: [26.20, 30.90, 34.80, 36.60, 41.78, 45.00],
+                            type: 'line',
+                            borderColor: '#10b981',
+                            backgroundColor: '#10b981',
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0.3,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: '營收 (億元)' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            title: { display: true, text: '毛利率 (%)' },
+                            ticks: { callback: value => value + '%' }
+                        }
+                    }
+                }
+            });
+
+            // Chart 2: Supply-Demand Deficit Chart
+            const ctx2 = document.getElementById('supplyDemandChart').getContext('2d');
+            window.supplyDemandChartObj = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: ['2025年', '2026E', '2027E', '2028E'],
+                    datasets: [
+                        {
+                            label: '高階需求 (億支)',
+                            data: [35.28, 51.16, 76.73, 103.60],
+                            backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                            borderColor: '#ef4444',
+                            borderWidth: 1
+                        },
+                        {
+                            label: '有效供給 (億支)',
+                            data: [38.70, 50.05, 69.47, 93.32],
+                            backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                            borderColor: '#3b82f6',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            title: { display: true, text: '億支' }
+                        }
+                    }
+                }
+            });
+
+            // Run initial calculation
+            calculateTargetPrice();
+        });
+    </script>
+</body>
+</html>
