@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>旺矽科技 (6223.TW) 深度研究與投資分析 Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 650px;
+            height: 320px;
+            max-height: 380px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .tab-active {
+            border-bottom: 3px solid #2563eb;
+            color: #2563eb;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Chosen Palette: Slate Warm Harmonious & Indigo Accent -->
+    <!-- Application Structure Plan: 
+        設計為兼具高階機構法人分析與互動探索功能的單頁股權研究 Dashboard。
+        包含 6 大主軸模組：
+        1. 投資總覽與評級 (Executive Verdict & Ratings) - 提供快速決策視圖與核心數據 Card。
+        2. 業務概覽與護城河 (Moat & Porter's 5 Forces) - 互動式同業對比與 Porter 五力分析。
+        3. 財務深度透視 (Financial Performance & Growth) - Chart.js 呈現營收/毛利趨勢與產品組合。
+        4. 籌碼與資金結構 (Chip Flow & Ownership) - 分析法人、大戶與董監事持股沉澱狀況。
+        5. 市場估值與互動目標價計算機 (Valuation & Scenario Calculator) - 提供動態 EPS & P/E 滑桿估算。
+        6. 紅旗警訊與風險評估 (Red Flags & Legal Analysis) - 針對專利訴訟與擴產風險進行陣列評估。
+        選擇此結構旨在打破傳統 PDF 報告的單向閱讀體驗，讓使用者可以動態進行情境模擬（Scenario Analysis）與多維度對比。
+    -->
+    <!-- Visualization & Content Choices:
+        - 營收與毛利率趨勢 -> Chart.js 組合圖 (Bar + Line) -> 呈現強勁的產品組合轉型與營業槓桿效果。
+        - 產品營收結構比例 -> Chart.js 環狀圖 (Doughnut) -> 突顯探針卡（VPC/MEMS）核心地位。
+        - 籌碼結構分佈 -> Chart.js 橫向長條圖 (Horizontal Bar) -> 直觀展現外資與大戶高持股沉澱度。
+        - 法人目標價對比 -> Chart.js 柱狀圖 -> 呈現市場共識與潛在漲幅空間。
+        - 目標價情境模擬器 -> Vanilla JS 滑桿計算機 -> 允許使用者調整 2027 預估 EPS 與 P/E 倍數。
+        - 聲明：完全無使用 SVG 標籤，無 Mermaid JS。
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <!-- Top Header -->
+    <header class="bg-slate-900 text-white sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="bg-blue-600 text-white font-black px-2.5 py-1 rounded text-sm tracking-wider">6223.TW</span>
+                <div>
+                    <h1 class="text-lg font-bold leading-tight">旺矽科技 MPI Corporation</h1>
+                    <p class="text-xs text-slate-400">AI與先進封裝浪潮下的測試介面巨擘 | 首席分析師研究報告</p>
+                </div>
+            </div>
+            <div class="hidden md:flex items-center space-x-6 text-sm">
+                <div><span class="text-slate-400">當前參考價:</span> <span class="font-bold text-emerald-400">NT$ 6,000</span></div>
+                <div><span class="text-slate-400">12M 目標價:</span> <span class="font-bold text-blue-400">NT$ 9,500</span></div>
+                <div><span class="text-slate-400">投資評級:</span> <span class="bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded border border-emerald-500/40">BUY 強烈買入</span></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Navigation Tabs -->
+    <nav class="bg-white border-b border-slate-200 sticky top-16 z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex space-x-2 md:space-x-8 overflow-x-auto text-sm font-medium py-3" id="nav-tabs">
+                <button onclick="switchTab('tab-summary')" id="btn-tab-summary" class="tab-btn tab-active px-3 py-1 whitespace-nowrap">📊 總覽與投資評級</button>
+                <button onclick="switchTab('tab-moat')" id="btn-tab-moat" class="tab-btn text-slate-600 hover:text-blue-600 px-3 py-1 whitespace-nowrap">🏰 護城河與競爭格局</button>
+                <button onclick="switchTab('tab-financial')" id="btn-tab-financial" class="tab-btn text-slate-600 hover:text-blue-600 px-3 py-1 whitespace-nowrap">📈 財務透視與營運</button>
+                <button onclick="switchTab('tab-chips')" id="btn-tab-chips" class="tab-btn text-slate-600 hover:text-blue-600 px-3 py-1 whitespace-nowrap">🔍 籌碼與股東結構</button>
+                <button onclick="switchTab('tab-valuation')" id="btn-tab-valuation" class="tab-btn text-slate-600 hover:text-blue-600 px-3 py-1 whitespace-nowrap">🎯 估值與情境試算</button>
+                <button onclick="switchTab('tab-risks')" id="btn-tab-risks" class="tab-btn text-slate-600 hover:text-blue-600 px-3 py-1 whitespace-nowrap">⚠️ 紅旗與風險矩陣</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+
+        <!-- ================= TAB 1: SUMMARY & VERDICT ================= -->
+        <section id="tab-summary" class="tab-content block space-y-6">
+            <div class="bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-6 rounded-2xl shadow-lg">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <div class="inline-block bg-blue-500/30 text-blue-200 text-xs px-3 py-1 rounded-full border border-blue-400/30 mb-2">一波段長期價值重估 (Re-rating) 進行中</div>
+                        <h2 class="text-2xl font-black">投資總結：半導體高階測試介面典範轉移的最大受益者</h2>
+                        <p class="text-blue-100 text-sm mt-1 max-w-3xl">
+                            旺矽（6223）靠半導體晶圓測試耗材（探針卡）與高階工程驗證設備賺錢。公司已成功建構包含 VPC（垂直式）與 MEMS（微機電）的高毛利雙引擎，並率先卡位矽光子（CPO）光電同測平台，具備不可替代的戰略地位。
+                        </p>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/20 text-center min-w-[200px]">
+                        <span class="text-xs text-blue-200 block">綜合投資評級</span>
+                        <span class="text-3xl font-black text-emerald-400 block my-1">BUY (買入)</span>
+                        <span class="text-xs text-slate-200">12M 目標價: <strong class="text-white">NT$ 9,500</strong></span>
+                        <span class="text-xs text-emerald-300 block">潛在上漲空間: +58.3%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contextual Intro Paragraph -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm text-slate-600 text-sm">
+                <strong>【模組導覽】</strong> 本視圖整合旺矽科技（6223）的核心營運亮點、財務里程碑與 3 項看多論述。旺矽受惠於 AI GPU / ASIC 晶片測試時間成倍拉長與腳位數爆發，2026 上半年 EPS 達 28.08 元，呈現翻倍成長，長線訂單能見度已延伸至 2027 年。
+            </div>
+
+            <!-- Key Metrics Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <span class="text-xs text-slate-500 block">2026H1 累計 EPS</span>
+                    <span class="text-2xl font-extrabold text-slate-900">NT$ 28.08</span>
+                    <span class="text-xs text-emerald-600 font-semibold block mt-1">↑ YoY +103.5%</span>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <span class="text-xs text-slate-500 block">2026Q2 單季營業利益率</span>
+                    <span class="text-2xl font-extrabold text-blue-600">34.4 %</span>
+                    <span class="text-xs text-blue-600 font-semibold block mt-1">創成立31年新高</span>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <span class="text-xs text-slate-500 block">2026E 市場共識 EPS</span>
+                    <span class="text-2xl font-extrabold text-indigo-600">NT$ 64.8</span>
+                    <span class="text-xs text-slate-500 block mt-1">預估 2027E 達 135+ 元</span>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <span class="text-xs text-slate-500 block">高階探針卡月產能 (2027E)</span>
+                    <span class="text-2xl font-extrabold text-amber-600">> 1,000萬針</span>
+                    <span class="text-xs text-amber-600 font-semibold block mt-1">湖口新廠產能開出</span>
+                </div>
+            </div>
+
+            <!-- 3 Bull Thesis & 3 Key Risks -->
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- 3 Bull Thesis -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="text-lg font-bold text-slate-900 border-b pb-2 flex items-center gap-2">
+                        <span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded font-bold">看多</span>
+                        3 大核心買入理由 (Investment Thesis)
+                    </h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex items-start gap-3">
+                            <span class="bg-emerald-50 text-emerald-700 font-bold px-2 py-1 rounded text-xs shrink-0">1</span>
+                            <p><strong>探針卡技術全涵蓋與AI極致推動：</strong> 旺矽為全球唯一能同時自主供應 CPC（第一）、VPC（第一）與 MEMS（位居第7並高速竄升）的廠商。AI GPU 與 ASIC 超高功耗及多晶粒（Chiplet）趨勢帶動單片測試時間與針數成倍增加，推升客製化高價探針卡 ASP 與毛利率逼近 60%。</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="bg-emerald-50 text-emerald-700 font-bold px-2 py-1 rounded text-xs shrink-0">2</span>
+                            <p><strong>矽光子（CPO）同測機台護城河：</strong> 跨領域整合工程探針台（AST）、溫控系統（MPIThermal）與光電對位（PA），首創晶圓級與晶粒級（Insertion 2 & 3）雙面光電同測平台，已被三星與北美科技巨擘採用，奠定 2027 世代第二成長曲線。</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="bg-emerald-50 text-emerald-700 font-bold px-2 py-1 rounded text-xs shrink-0">3</span>
+                            <p><strong>湖口新廠開啟倍數級產能擴張：</strong> 2026 下半年起湖口 2,000 坪新廠開出，MEMS 月產能將自 2026 年 350 萬針大幅翻倍至 2027 年的 600 萬針以上，整體探針卡產能突破千萬針，發揮強大範疇與規模經濟槓桿。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3 Key Risks -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="text-lg font-bold text-slate-900 border-b pb-2 flex items-center gap-2">
+                        <span class="bg-rose-100 text-rose-800 text-xs px-2 py-0.5 rounded font-bold">風險</span>
+                        3 大核心潛在風險 (Key Risks)
+                    </h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex items-start gap-3">
+                            <span class="bg-rose-50 text-rose-700 font-bold px-2 py-1 rounded text-xs shrink-0">1</span>
+                            <p><strong>義大利 Technoprobe 專利訴訟干擾：</strong> 競爭對手向台灣法院聲請定暫時狀態處分（針對 MW 系列），旺矽已反訴並提無效舉發。雖暫未影響營運，但若司法出現不利裁定或訴訟延燒至海外終端客戶，可能干擾短期出貨。</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="bg-rose-50 text-rose-700 font-bold px-2 py-1 rounded text-xs shrink-0">2</span>
+                            <p><strong>新廠擴建與關鍵光學零組件交期：</strong> 擴產進度若受無塵室施工或海外長交期高階光學元件（部分交期 >6 個月）遞延，可能導致高階設備訂單無法及時確認，釋放利潤時間落後。</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="bg-rose-50 text-rose-700 font-bold px-2 py-1 rounded text-xs shrink-0">3</span>
+                            <p><strong>新台幣匯率急升逆風：</strong> 旺矽逾 60% 營收以美元結算，台幣快速升值除帶來業外匯兌評價損失外，亦會對名目毛利率造成約 1~2 個百分點的壓縮。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 2: MOAT & COMPETITION ================= -->
+        <section id="tab-moat" class="tab-content hidden space-y-6">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm text-slate-600 text-sm">
+                <strong>【模組導覽】</strong> 本區塊剖析旺矽科技的護城河來源與波特五力模型（Porter's 5 Forces），並與國際四大競爭對手（FormFactor, Technoprobe, 精測, 穎崴）進行多維度對標，強調其高度垂直整合與「工程設備 + 量產耗材」閉環生態圈的競爭獨佔性。
+            </div>
+
+            <!-- Porter's 5 Forces & Moat Cards -->
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                    <div class="text-blue-600 font-extrabold text-sm border-b pb-1">護城河一：工程與量產閉環生態</div>
+                    <h4 class="font-bold text-slate-800">AST 研發與探針卡量產雙向綁定</h4>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        IC 設計公司在晶片下線初期即使用旺矽 AST 工程探針台進行驗證。晶片量產時可無縫對接旺矽探針卡，省去繁瑣校正，形成對對手極高之轉換成本（Switching Cost）。
+                    </p>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                    <div class="text-blue-600 font-extrabold text-sm border-b pb-1">護城河二：供應鏈垂直整合極致</div>
+                    <h4 class="font-bold text-slate-800">針頭、基板自製與 PCB 升級</h4>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        自主掌握探針電鍍、微微金屬加工及多層陶瓷基板（MLC），並計畫在 2027 年將測試載板（PCB）自製率提升至 50%，完全鎖定成本優勢並防範原物料通膨。
+                    </p>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                    <div class="text-blue-600 font-extrabold text-sm border-b pb-1">護城河三：光電熱多元測試能力</div>
+                    <h4 class="font-bold text-slate-800">CPO 矽光子測試獨家跨界</h4>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        結合 AST 精密載台、MPIThermal 寬溫控（-100℃~300℃）與 PA 光學對位，為全球唯一能同時提供 CPO 晶圓與晶粒級光電同測方案的廠商。
+                    </p>
+                </div>
+            </div>
+
+            <!-- Peer Comparison Table -->
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4 overflow-x-auto">
+                <h3 class="text-lg font-bold text-slate-900">全球半導體測試介面主要同業對標表</h3>
+                <table class="w-full text-left text-xs text-slate-600 border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                            <th class="p-3">廠商名稱</th>
+                            <th class="p-3">總部</th>
+                            <th class="p-3">探針卡主力架構</th>
+                            <th class="p-3">測試設備協同度</th>
+                            <th class="p-3">核心優勢與營運利基</th>
+                            <th class="p-3">潛在威脅與劣勢</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <tr class="bg-blue-50/50 font-medium text-slate-900">
+                            <td class="p-3 font-bold text-blue-700">旺矽 (MPI)</td>
+                            <td class="p-3">台灣新竹</td>
+                            <td class="p-3">CPC(#1)、VPC(#1)、MEMS(#7速升)</td>
+                            <td class="p-3 font-bold text-emerald-600">極高 (AST+溫控+光電)</td>
+                            <td class="p-3">垂直整合度最高、交期快、電光熱整合完整</td>
+                            <td class="p-3 text-slate-500">歐美本地即時服務據點較少、遭專利訴訟聲請</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-bold">Technoprobe</td>
+                            <td class="p-3">義大利</td>
+                            <td class="p-3">MEMS(邏輯霸主)、VPC</td>
+                            <td class="p-3 text-rose-500">低 (採購外部自動化)</td>
+                            <td class="p-3">與 Intel 等 IDM 深度綁定，專利池深厚</td>
+                            <td class="p-3">營運成本高，跨光電量測能力較弱，受台廠性價比競爭</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-bold">FormFactor</td>
+                            <td class="p-3">美國</td>
+                            <td class="p-3">MEMS、VPC (橫跨DRAM與邏輯)</td>
+                            <td class="p-3 text-emerald-600">極高 (工程探針台領導者)</td>
+                            <td class="p-3">專利佈局最完整、國際測試規格制定者</td>
+                            <td class="p-3">定價彈性低、製造靈活性差，毛利率受高營業費用侵蝕</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-bold">中華精測 (CHPT)</td>
+                            <td class="p-3">台灣桃園</td>
+                            <td class="p-3">VPC、MEMS、自製 TF-MLC</td>
+                            <td class="p-3 text-amber-600">中 (專注測試載板)</td>
+                            <td class="p-3">高速測試載板實力強，手機旗艦 AP 市佔佳</td>
+                            <td class="p-3">探針卡產品線廣度遜於旺矽，受單一消費電子客戶波動影響深</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-bold">穎崴 (WinWay)</td>
+                            <td class="p-3">台灣高雄</td>
+                            <td class="p-3">VPC、成品測試 Socket</td>
+                            <td class="p-3 text-rose-500">低 (專注 FT 封裝測試)</td>
+                            <td class="p-3">高頻同軸 Socket 在 AI GPU FT 最終測試獨大</td>
+                            <td class="p-3">營運核心偏向晶圓切割後 FT 測試，前段 CP 晶圓探針卡規模小</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ================= TAB 3: FINANCIALS & GROWTH ================= -->
+        <section id="tab-financial" class="tab-content hidden space-y-6">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm text-slate-600 text-sm">
+                <strong>【模組導覽】</strong> 分析旺矽 2023 至 2026 年近三年的財務表現與利潤率變化。得益於 AI 伺服器高階探針卡（ASP 倍增）以及規模槓桿（2026Q2 營業利益率 34.4%），公司毛利率已結構性跨入 58%~60% 的頂級區間。
+            </div>
+
+            <!-- Financial Charts Row -->
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Chart 1: Revenue & Profit Margins -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="text-sm font-bold text-slate-800 mb-4">合併營收與三率趨勢 (2023 - 2026H1)</h3>
+                    <div class="chart-container">
+                        <canvas id="financialsChart"></canvas>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2 text-center">高附加價值探針卡放量與高自製率，驅動毛利率近 60%</p>
+                </div>
+
+                <!-- Chart 2: Product Revenue Mix -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="text-sm font-bold text-slate-800 mb-4">2026 年產品事業營收結構占比估算</h3>
+                    <div class="chart-container">
+                        <canvas id="productMixChart"></canvas>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2 text-center">探針卡事業群為最主要獲利支柱，設備事業成長勁揚</p>
+                </div>
+            </div>
+
+            <!-- Financial Data Table -->
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                <h3 class="text-lg font-bold text-slate-900">近 3 年及最新季度核心財務數據明細表</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-600 border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                                <th class="p-3">財務年度/季度</th>
+                                <th class="p-3">合併營收 (億台幣)</th>
+                                <th class="p-3">毛利率 (%)</th>
+                                <th class="p-3">營業利益率 (%)</th>
+                                <th class="p-3">歸屬母公司淨利 (億)</th>
+                                <th class="p-3">EPS (元)</th>
+                                <th class="p-3">關鍵營運亮點</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr>
+                                <td class="p-3 font-bold">2023 全年</td>
+                                <td class="p-3">81.47</td>
+                                <td class="p-3">47.9%</td>
+                                <td class="p-3">20.3%</td>
+                                <td class="p-3">13.12</td>
+                                <td class="p-3">13.92</td>
+                                <td class="p-3">庫存調整尾聲，自製率穩步提升</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-bold">2024 全年</td>
+                                <td class="p-3">101.71</td>
+                                <td class="p-3">55.0%</td>
+                                <td class="p-3">27.6%</td>
+                                <td class="p-3">23.01</td>
+                                <td class="p-3">24.42</td>
+                                <td class="p-3">AI 伺服器放量，營收首度突破百億關卡</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-bold">2025 全年</td>
+                                <td class="p-3">133.71</td>
+                                <td class="p-3">56.0%</td>
+                                <td class="p-3">28.2%</td>
+                                <td class="p-3">31.80</td>
+                                <td class="p-3">33.49</td>
+                                <td class="p-3">營收年增 31.5%，每股淨值升至 148 元創高</td>
+                            </tr>
+                            <tr class="bg-blue-50/30">
+                                <td class="p-3 font-bold text-blue-700">2026 年 Q1</td>
+                                <td class="p-3">39.33</td>
+                                <td class="p-3 font-semibold">59.4%</td>
+                                <td class="p-3 font-semibold">32.4%</td>
+                                <td class="p-3">12.27</td>
+                                <td class="p-3 font-bold text-blue-600">12.53</td>
+                                <td class="p-3">單季獲利創歷史新高，毛利率逼近 60%</td>
+                            </tr>
+                            <tr class="bg-blue-50/30">
+                                <td class="p-3 font-bold text-blue-700">2026 年 Q2</td>
+                                <td class="p-3">52.33</td>
+                                <td class="p-3 font-semibold">58.4%</td>
+                                <td class="p-3 font-semibold">34.4%</td>
+                                <td class="p-3">15.24</td>
+                                <td class="p-3 font-bold text-blue-600">15.55</td>
+                                <td class="p-3">營業利益率 34.4% 刷新成立 31 年紀錄</td>
+                            </tr>
+                            <tr class="bg-emerald-50/50 font-bold text-slate-900">
+                                <td class="p-3 text-emerald-700">2026 上半年累計</td>
+                                <td class="p-3">91.66</td>
+                                <td class="p-3">58.8%</td>
+                                <td class="p-3">33.5%</td>
+                                <td class="p-3">27.51</td>
+                                <td class="p-3 text-emerald-600">28.08</td>
+                                <td class="p-3">上半年 EPS 年增 103.5%，獲利結構正式定錨</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 4: CHIP FLOW & OWNERSHIP ================= -->
+        <section id="tab-chips" class="tab-content hidden space-y-6">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm text-slate-600 text-sm">
+                <strong>【模組導覽】</strong> 籌碼面深度解析。旺矽籌碼呈現極高度集中，千張大戶與機構法人（外資與投信）掌控逾 82% 股權，且董監事持股 9.39% 無任何質押，代表籌碼處於極度穩定的「沉澱狀態」，在外流通浮額相當有限。
+            </div>
+
+            <!-- Ownership Charts Grid -->
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Chart 3: Chip Flow Distribution -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="text-sm font-bold text-slate-800 mb-4">法人與關鍵股東持股結構 (2026年10月最新)</h3>
+                    <div class="chart-container">
+                        <canvas id="chipFlowChart"></canvas>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2 text-center">外資持股達年內高點 31.9%，千張大戶持股集中度逾 38%</p>
+                </div>
+
+                <!-- Chip Flow Cards -->
+                <div class="space-y-4">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-slate-800 text-sm">外資動向 (Foreign Investors)</span>
+                            <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-0.5 rounded">買超加碼</span>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            外資持股比率由 2026 年年中的 28.55% 攀升至 10 月初的 31.87%~31.98%，顯示歐美長線基金在 Q2 財報發布後積極進場鎖籌碼。
+                        </p>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-slate-800 text-sm">國內投信 (Domestic Trusts)</span>
+                            <span class="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-0.5 rounded">戰略性調節</span>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            投信持股維持在約 20.42%，隨股價大幅衝高進行部分獲利了結，但整體持股部位仍高於歷史平均，並無撤退跡象。
+                        </p>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-slate-800 text-sm">內部人與董監持股 (Insiders)</span>
+                            <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2 py-0.5 rounded">0 質押 (超安全)</span>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            董監持股長期維持於 9.39% 且質押張數持續為零，反映管理階層對公司長線競爭力具備絕對信心，無流動性危機。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 5: VALUATION & SCENARIO ================= -->
+        <section id="tab-valuation" class="tab-content hidden space-y-6">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm text-slate-600 text-sm">
+                <strong>【模組導覽】</strong> 估值模型與目標價試算。此處提供法人機構目標價統計圖，並內建「2027 年目標價情境模擬計算機」，您可以透過滑桿調整預估 EPS 與給予的本益比（P/E Multiple），實時評估投資潛在上漲空間。
+            </div>
+
+            <!-- Target Price Chart & Calculator Grid -->
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Target Price Comparison Chart -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="text-sm font-bold text-slate-800 mb-4">各大外資與本土券商目標價評等比較</h3>
+                    <div class="chart-container">
+                        <canvas id="targetPriceChart"></canvas>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2 text-center">外資機構最高上看 12,000 元，平均目標價落於 9,200 - 9,800 元</p>
+                </div>
+
+                <!-- Interactive Target Price Calculator -->
+                <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-6 rounded-xl shadow-md space-y-5">
+                    <h3 class="text-base font-bold text-blue-300 border-b border-slate-700 pb-2">🧮 2027 年目標價情境模擬計算機</h3>
+                    
+                    <!-- Slider 1: EPS -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-xs">
+                            <span class="text-slate-300">2027E 預估每股盈餘 (EPS):</span>
+                            <span id="eps-val" class="font-bold text-emerald-400 text-sm">NT$ 135</span>
+                        </div>
+                        <input type="range" id="eps-slider" min="100" max="220" value="135" step="5" class="w-full accent-blue-500 cursor-pointer" oninput="calcTargetPrice()">
+                        <div class="flex justify-between text-[10px] text-slate-400">
+                            <span>100 (悲觀)</span>
+                            <span>135 (共識中位)</span>
+                            <span>220 (極樂觀)</span>
+                        </div>
+                    </div>
+
+                    <!-- Slider 2: PE -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-xs">
+                            <span class="text-slate-300">給予前瞻本益比 (Forward P/E):</span>
+                            <span id="pe-val" class="font-bold text-blue-400 text-sm">55 X</span>
+                        </div>
+                        <input type="range" id="pe-slider" min="30" max="80" value="55" step="1" class="w-full accent-blue-500 cursor-pointer" oninput="calcTargetPrice()">
+                        <div class="flex justify-between text-[10px] text-slate-400">
+                            <span>30x (成熟半導體)</span>
+                            <span>55x (當前水準)</span>
+                            <span>80x (高成長晶片)</span>
+                        </div>
+                    </div>
+
+                    <!-- Result Box -->
+                    <div class="bg-white/10 p-4 rounded-lg border border-white/15 text-center space-y-1">
+                        <span class="text-xs text-slate-300 block">試算預估目標價</span>
+                        <div id="calc-target-price" class="text-3xl font-black text-amber-400">NT$ 7,425</div>
+                        <div id="calc-upside" class="text-xs text-emerald-400 font-semibold">潛在報酬幅度: +23.8%</div>
+                    </div>
+                    <p class="text-[11px] text-slate-400 leading-tight">
+                        註：計算公式為 [預估 2027 EPS] × [給予 P/E]，對比當前參考基準價 NT$ 6,000 計算上漲空間。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 6: RISKS & RED FLAGS ================= -->
+        <section id="tab-risks" class="tab-content hidden space-y-6">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm text-slate-600 text-sm">
+                <strong>【模組導覽】</strong> 警訊檢測與法務/營運風險矩陣。雖然旺矽業務基本面極強，但仍須批判性審視義大利 Technoprobe 專利訴訟進展、擴產交期以及匯率等潛在紅旗（Red Flags）。
+            </div>
+
+            <!-- Risk Matrix Grid -->
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Legal Risk: Patent Suit -->
+                <div class="bg-white p-5 rounded-xl border-l-4 border-rose-500 shadow-sm space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-slate-800 text-sm">1. 義大利 Technoprobe 專利戰警訊</h4>
+                        <span class="bg-rose-100 text-rose-800 text-xs font-bold px-2 py-0.5 rounded">法務風險 (中高)</span>
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Technoprobe 於 2026 年 5 月向智慧財產法院聲請定暫時狀態處分，控告旺矽 MW 系列探針卡侵犯其台灣第 I705249 號專利。旺矽已反訴並提無效舉發。雖短期製造未停擺，但若法院裁定處分生效，可能短暫干擾高階探針卡出貨。
+                    </p>
+                </div>
+
+                <!-- Operational Risk: Expansion -->
+                <div class="bg-white p-5 rounded-xl border-l-4 border-amber-500 shadow-sm space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-slate-800 text-sm">2. 湖口新廠與光學元件交期瓶頸</h4>
+                        <span class="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-0.5 rounded">營運風險 (中)</span>
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        2026 年資本支出由 16~20 億元大幅調升至 27 億元。若無塵室建置延誤，或高階 AST 設備所需的海外精密光學鏡組交期（部分長達 6 個月）進一步拉長，將導致部分高毛利設備營收遞延確認。
+                    </p>
+                </div>
+
+                <!-- Market Risk: CPO Timing -->
+                <div class="bg-white p-5 rounded-xl border-l-4 border-blue-500 shadow-sm space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-slate-800 text-sm">3. 矽光子 CPO 商業化放量時程變數</h4>
+                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-0.5 rounded">市場時程風險 (低)</span>
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        當前市場高估值已部分反映 CPO 於 2027 年爆發。若北美 CSP 巨頭與台積電等代工廠將 CPO 規模量產時程延後至 2028 年，可能使光電同測設備的獲利貢獻落後於最樂觀之模型預估。
+                    </p>
+                </div>
+
+                <!-- FX Risk: Currency -->
+                <div class="bg-white p-5 rounded-xl border-l-4 border-slate-400 shadow-sm space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-slate-800 text-sm">4. 新台幣升值與匯兌波動</h4>
+                        <span class="bg-slate-100 text-slate-800 text-xs font-bold px-2 py-0.5 rounded">財務風險 (低)</span>
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        旺矽逾 60% 營收以美元報價結算（如 2025Q2 曾認列 3.28 億元單季匯損）。若新台幣短期出現非預期急升，除業外匯損外，亦會對名目毛利率造成 1~2% 的短暫壓縮。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 text-xs py-6 border-t border-slate-800 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-2">
+            <p>本報告由「台股專業首席股權研究團隊」根據公開資訊與研究報告製作，僅供投資研究參考，不構成任何買賣決策之承諾與要約。</p>
+            <p>© 2026 MPI Corporation (6223.TW) Equity Research Dashboard. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Tab Switcher Logic
+        function switchTab(tabId) {
+            // Hide all contents
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('block');
+            });
+            // Show target
+            const target = document.getElementById(tabId);
+            if (target) {
+                target.classList.remove('hidden');
+                target.classList.add('block');
+            }
+
+            // Update Tab Button Styles
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('tab-active');
+                btn.classList.add('text-slate-600');
+            });
+            const activeBtn = document.getElementById('btn-' + tabId);
+            if (activeBtn) {
+                activeBtn.classList.add('tab-active');
+                activeBtn.classList.remove('text-slate-600');
+            }
+        }
+
+        // Target Price Calculator Logic
+        function calcTargetPrice() {
+            const eps = parseFloat(document.getElementById('eps-slider').value);
+            const pe = parseFloat(document.getElementById('pe-slider').value);
+            
+            document.getElementById('eps-val').innerText = 'NT$ ' + eps;
+            document.getElementById('pe-val').innerText = pe + ' X';
+
+            const targetPrice = Math.round(eps * pe);
+            const basePrice = 6000;
+            const upside = (((targetPrice - basePrice) / basePrice) * 100).toFixed(1);
+
+            document.getElementById('calc-target-price').innerText = 'NT$ ' + targetPrice.toLocaleString();
+            
+            const upsideEl = document.getElementById('calc-upside');
+            if (upside >= 0) {
+                upsideEl.innerText = '潛在報酬幅度: +' + upside + '%';
+                upsideEl.className = 'text-xs text-emerald-400 font-semibold';
+            } else {
+                upsideEl.innerText = '潛在下行幅度: ' + upside + '%';
+                upsideEl.className = 'text-xs text-rose-400 font-semibold';
+            }
+        }
+
+        // Chart.js Initialization
+        window.addEventListener('DOMContentLoaded', () => {
+            // Chart 1: Financial Performance
+            const ctx1 = document.getElementById('financialsChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: ['2023', '2024', '2025', '2026H1'],
+                    datasets: [
+                        {
+                            label: '合併營收 (億元)',
+                            data: [81.47, 101.71, 133.71, 91.66],
+                            backgroundColor: 'rgba(37, 99, 235, 0.7)',
+                            borderColor: '#2563eb',
+                            borderWidth: 1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: '毛利率 (%)',
+                            data: [47.9, 55.0, 56.0, 58.8],
+                            type: 'line',
+                            borderColor: '#059669',
+                            backgroundColor: '#059669',
+                            borderWidth: 3,
+                            fill: false,
+                            yAxisID: 'y1'
+                        },
+                        {
+                            label: '營業利益率 (%)',
+                            data: [20.3, 27.6, 28.2, 33.5],
+                            type: 'line',
+                            borderColor: '#d97706',
+                            backgroundColor: '#d97706',
+                            borderWidth: 3,
+                            fill: false,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            position: 'left',
+                            title: { display: true, text: '營收 (億元)' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            position: 'right',
+                            min: 15,
+                            max: 70,
+                            title: { display: true, text: '利潤率 (%)' },
+                            grid: { drawOnChartArea: false }
+                        }
+                    }
+                }
+            });
+
+            // Chart 2: Product Mix
+            const ctx2 = document.getElementById('productMixChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['探針卡事業群 (CPC/VPC/MEMS)', '測試設備事業群 (AST/Thermal/PA)', '維修與其他長尾服務'],
+                    datasets: [{
+                        data: [71.5, 26.5, 2.0],
+                        backgroundColor: ['#2563eb', '#0d9488', '#94a3b8'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+
+            // Chart 3: Chip Flow Distribution
+            const ctx3 = document.getElementById('chipFlowChart').getContext('2d');
+            new Chart(ctx3, {
+                type: 'bar',
+                data: {
+                    labels: ['外資持股', '國內投信', '千張大戶集中度', '董監事持股'],
+                    datasets: [{
+                        label: '持股比例 (%)',
+                        data: [31.9, 20.4, 38.4, 9.4],
+                        backgroundColor: ['#3b82f6', '#f59e0b', '#10b981', '#6366f1']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: { max: 50, title: { display: true, text: '百分比 (%)' } }
+                    }
+                }
+            });
+
+            // Chart 4: Target Price Comparison
+            const ctx4 = document.getElementById('targetPriceChart').getContext('2d');
+            new Chart(ctx4, {
+                type: 'bar',
+                data: {
+                    labels: ['Aletheia', '永豐投顧', '麥格理 (Macquarie)', '美銀 (BofA)', '高盛 (Goldman Sachs)', '當前參考價'],
+                    datasets: [{
+                        label: '12M 目標價 (NT$)',
+                        data: [12000, 9805, 9500, 8500, 8500, 6000],
+                        backgroundColor: ['#059669', '#10b981', '#2563eb', '#3b82f6', '#6366f1', '#64748b']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { min: 4000, max: 13000, title: { display: true, text: '目標價 (新台幣元)' } }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
